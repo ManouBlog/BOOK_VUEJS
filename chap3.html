@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Document</title>
+</head>
+<body>
+    <a href="chp2.html">chapitre 2</a>
+    <h1 translate="no"> chapitre 3 :Styling with Vue</h1>
+    <p>Vue helps you style your website or application in a few ways. v-bind:class and vbind:style both have special helpers to help you set the class attribute and inline
+        styles from your data, and when you’re using components with vue-loader, it’s possible to write scoped CSS that will affect only the component that CSS is writing in.</p>
+<h1 translate="no">Class Binding</h1>
+<p>
+    It’s common to use v-bind with the class attribute in order to add or remove classes
+depending on your data. Vue adds a couple of neat enhancements when using v-bind
+to set the class attribute, making it a lot nicer to work with.
+</p>
+<p>
+    If you’ve used the classNames utility in React, you’ll be fairly familiar with the v-bind syntax. It’s basically the same, except wrapped
+in an array instead of being arguments of a function.
+</p>
+<p>
+    If you pass an array to v-bind:class, the classes in the array will be joined together.
+This is great for times when you want to set classes from your data or computed
+properties. Take the following example:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;div id="app"&gt;
+            &lt;div v-bind:class="[firstClass, secondClass]"&gt;
+            ...
+            &lt;/div&gt;
+           &lt;/div&gt;
+           &lt;script&gt;
+            new Vue({
+            el: '#app',
+            data: {firstClass: 'foo'
+ },
+ computed: {
+ secondClass() {
+ return 'bar';
+ }
+ }
+ });
+&lt;/script&gt;
+    </pre>
+</h3>
+<p>
+    In this example, firstClass equals foo and secondClass evaluates to bar, so the div
+element would be given a class attribute of foo bar.
+</p>
+<p>
+    In addition to using arrays, you can use objects. An object will conditionally add the
+keys as classes depending on the values: if the value is truthy, the key will be added as
+a class; otherwise, if it is false, it will not.
+</p>
+<p>
+    For example, if the bound class is { my-class: shouldAddClass }, the element will
+have the my-class element if shouldAddClass evaluates to a truthy value. You can
+also specify more than one class in the object. Take the following example:
+</p>
+<h3>
+    <pre>
+        &lt;div id="app"&gt;
+            &lt;div v-bind:class="classes"&gt;&lt;/div&gt;
+           &lt;/div&gt;
+           &lt;script&gt;
+            new Vue({
+            el: '#app',
+            data: {
+            shouldBeBar: true
+            },
+            computed: {
+            classes() {
+            return {
+            foo: true,
+            bar: this.shouldBeBar,
+            hello: false
+            };
+            }
+            }
+            });
+           &lt;/script&gt;
+    </pre>
+</h3>
+<p>
+    Once again in this example, the generated class attribute will be foo bar: foo is set to
+true; bar is set to this.shouldBeBar, which evaluated to true; and hello is set to
+false, so isn’t applied to the element.
+</p>
+<p>
+    Although I’ve returned the object from a computed property, this is entirely optional,
+and you can specify the object inline. It’s just a nice pattern to avoid the line getting
+too long when you have more than a couple of classes.
+
+</p>
+<p>
+    It’s also possible to mix both arrays and objects by using the objects inside an array
+when you want to add classes from both variables and conditionally add classes:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;div v-bind:class="[
+ 'my-class',
+ classFromVariable,
+ { 'conditional-class': hasClass }
+ ]"&gt;&lt;/div&gt;
+    </pre>
+</h3>
+<p>
+    You can, of course, specify the classes as a normal string or from a variable containing
+the class name if you don’t need any of the functionality from using arrays or objects.
+</p>
+<h1 translate="no">Inline Style Binding</h1>
+<p>
+    Similar to v-bind:class, covered in the previous section, Vue also has a special
+helper for the style attribute. Instead of you having to concatenate strings to specify
+inline styles, you can specify them as an object instead:
+</p>
+<h3>
+    <pre>
+        &lt;div v-bind:style="{ fontWeight: 'bold', color: 'red' }"&gt;&lt;/div&gt;
+    </pre>
+</h3>
+<p>
+    Note that we’re writing fontWeight, not 'font-weight'. Vue automatically converts
+the object’s properties from camel case to their equivalent CSS properties, which
+means we don’t have to worry about escaping them.
+</p>
+<p>
+    Although it’s generally better to style elements by using classes when possible, inline
+style binding is useful for setting styles from variables. For example, the following
+example outputs 12 elements of different colors, creating a color swatch:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;div id="app"&gt;
+            &lt;div
+            v-for="n in 12"
+            class="color"
+            :style="{ backgroundColor: getColor(n) }"&gt;
+            &lt;/div&gt;
+           &lt;/div&gt;
+           &lt;script&gt;
+            new Vue({
+            el: '#app',
+            methods: {
+            getColor(n) {
+            return `hsl(${(n - 1) * 30}, 100%, 75%)`;
+            }
+            }
+            });
+           &lt;/script&gt;
+    </pre>
+</h3>
+<p>
+    After applying some CSS, we can see a colour swatch: a red box, followed by an
+orange box, all the way through to pink.
+</p>
+<p>
+    Vue also handles vendor prefixing for you automatically: if you set a style that
+requires a vendor prefix, Vue will automatically add that for you.
+</p>
+<h2 translate="no">Array Syntax</h2>
+<p>You can use an array to specify multiple style objects:</p>
+<h3>
+    <pre translate="no">
+        &lt;div :style="[baseStyles, moreStyles]"&gt;...&lt;/div&gt;
+    </pre>
+</h3>
+<p>
+    The styles from both objects will be applied, with the styles from moreStyles overriding baseStyles if both specify the same styles.
+</p>
+<h2 translate="no">
+    Multiple Values
+</h2>
+<p>
+    It’s also possible to provide multiple values in an array to set the last value that the
+browser supports:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;div :style="{ display: ['-webkit-box', '-ms-flexbox', 'flex'] }"&gt;...&lt;/div&gt;
+    </pre>
+</h3>
+<p>
+    That’ll set display: flex if it is supported; otherwise, it’ll attempt -ms-flexbox, and
+otherwise, -webkit-box.
+</p>
+<h1 translate="no">Scoped CSS with vue-loader</h1>
+<p>
+    You previously saw how to use vue-loader to split your components into individual .vue files. As a quick reminder, here’s an example from “vue-loader and .vue Files”
+on page 61:
+</p>
+<h3>
+    <pre>
+        &lt;template&gt;
+            &lt;p&gt;The number is {{ number }}&lt;/p&gt;
+           &lt;/template&gt;
+           &lt;script&gt;
+            export default {
+            props: {
+            number: {
+            type: Number,
+            required: true
+            }
+            }
+            };
+           &lt;/script&gt;
+    </pre>
+</h3>
+<p>
+    In addition to the &lt;template&gt; and &lt;script&gt; tags, it’s also possible to put &lt;style&gt;
+        tags in these files, which will then be output onto the page (or you can set up webpack
+        to extract it into an external CSS file). Let’s say we want to style the previous example
+        so that the number is bold:
+</p>
+<h3>
+    <pre>
+        &lt;template&gt;
+            &lt;p&gt;The number is &lt;span class="number"&gt;{{ number }}&lt;/span&gt;&lt;/p&gt;
+           &lt;/template&gt;
+           &lt;script&gt;
+            export default {props: {
+                number: {
+                type: Number,
+                required: true
+                }
+                }
+                };
+               &lt;/script&gt;
+               &lt;style&gt;
+                .number {
+                font-weight: bold;
+                }
+               &lt;/style&gt;
+    </pre>
+</h3>
+<p>
+    The number is now bold. <br>
+Unlike the JavaScript, the CSS in that component will affect all the HTML on the
+page, not just the component. Vue has a way to fix this: scoped CSS. If we add the
+scoped attribute to the style tag, Vue will automatically process the CSS and HTML
+so that the CSS affects only the HTML in that component.
+</p>
+<p>
+    Let’s take a look at how it works. If we add the scoped attribute to the previous style
+tag (so that it is now &lt;style scoped&gt;), the following HTML is output:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;p data-v-e0e8ddca>The number is &lt;span data-v-e0e8ddca class="number"&gt;10
+        &lt;/span&gt;&lt;/p&gt;
+       &lt;style&gt;
+       .number[data-v-e0e8ddca] {
+        font-weight: bold;
+       }
+       &lt;/style&gt;
+    </pre>
+</h3>
+<p>
+    You can see that Vue has added a data attribute to every element that’s part of the
+component, and then added it to the CSS selector so that the CSS is applied to only
+those elements.
+</p>
+<h1 translate="no">CSS Modules with vue-loader</h1>
+<p>
+    As an alternative to scoped CSS, you can use CSS modules with vue-loader:
+</p>
+<h3>
+    <pre>
+        &lt;template&gt;
+            &lt;p&gt;The number is &lt;span :class="$style.number"&gt;{{ number }}&lt;/span&gt;&lt;/p&gt;
+           &lt;/template&gt;
+           &lt;style module&gt;
+            .number {
+            font-weight: bold;
+            }
+           &lt;/style&gt;
+    </pre>
+</h3>
+<p>
+    The .number style will be replaced by a random style name, and $style.number will
+evaluate to that name, so the CSS specified in the .number selector will be applied to
+only that single element.
+</p>
+<h1 translate="no">Preprocessors</h1>
+<p>
+    You can configure vue-loader to run your CSS, JavaScript, and HTML through preprocessors. Say you want to write SCSS instead of CSS to take advantage of features
+such as nesting and variables. You can do that in two steps—first, install sass-loader
+and node-sass using npm, and then add lang="scss" to your style tag:
+</p>
+<h3>
+    <pre>
+        &lt;style lang="scss" scoped&gt;
+            $color: red;
+            .number {
+            font-weight: bold;
+            color: $color;
+            }
+           &lt;/style&gt;
+    </pre>
+</h3>
+<p>
+    It’s as simple as that. Scoped CSS is still handled automatically; there are no extra
+steps to get it working again.
+</p>
+<p>
+    vue-loader has a load of other features that are beyond the scope of this book. If
+you’re going to use it, I’d definitely recommend giving the documentation a read.
+</p>
+<p>
+    A lot of these features are also available in vueify, the Browserify equivalent of vueloader. However, vueify is not as popular as vue-loader, so I don’t cover it here.
+</p>
+<h1>Summary</h1>
+<p>
+    In this short chapter, you looked at various ways Vue helps you style your application.
+You looked at the special v-bind:class and v-bind:style attributes, which make it
+easier to add and set classes and styles. You also learned about a few styling-specific
+features of vue-loader: scoped CSS, CSS modules, and preprocessing
+</p>
+<a href="chap4.html">Render Functions and JSX</a>
+
+
+    </body>
+</html>

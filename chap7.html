@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Document</title>
+</head>
+<body>
+    <a href="chap6.html">chap6</a>
+    <h1> chapitre7 :Testing Vue Components</h1>
+    <p>
+        By separating our code into components, we’ve made it easy to write unit tests for our
+app. Our code has been divided into small chunks that serve one purpose each, with a
+relatively small number of options—perfect for testing. Testing your code ensures
+that when you make changes in the future, you won’t break things that you weren’t
+expecting to have changed. If you’re working on any reasonably sized app, you should
+probably be writing tests. <br>
+In this chapter, we’ll first look at testing your components using just Vue, and then
+we’ll look at using vue-test-utils to make the syntax a bit nicer. <br>
+We won’t be looking at a test framework such as Jasmine, Mocha, or Jest in this book.
+The most the tests written in this chapter will do is throw an error that can then be
+inspected in the browser console. For a more in-depth look at testing in JavaScript,
+check out JavaScript Testing with Jasmine by Evan Hahn (O’Reilly), or any number of
+articles online.
+    </p>
+    <h1>Testing a Simple Component</h1>
+    <p>
+        Let’s start by looking at a simple component that we can test—a simpler version of the
+NotificationCount component you saw in the previous chapter:
+    </p>
+    <h3>
+        <pre translate="no">
+            const NotificationCount = {
+                template: `&lt;p&gt;
+                Messages: &lt;span class="count"&gt;{{ messageCount }}&lt;/span&gt;
+                &lt;a @click.prevent="handleUpdate"&gt;(update)&lt;/a&gt;
+                &lt;/p&gt;`,
+                props: {
+                initialCount: {
+                type: Number,
+                default: 0
+                }
+            },
+            data() {
+            return { messageCount: this.initialCount };
+            },
+            methods: {
+            handleUpdate() {
+            this.$http.get('/api/new-messages')
+            .then((data) => {
+            this.messageCount += data.messages.length;
+            });
+            }
+            }
+           };
+        </pre>
+    </h3>
+    <p>
+        The component initially displays the notification count given in the initialCount
+prop, and then calls an API to update the number whenever the update link is
+pressed.
+    </p>
+    <p>
+        But what could we test? I can see three things that we could write tests for:
+    </p>
+<p>
+    • We could test that the provided initial count displays correctly. <br>
+• There could be a test to ensure that when the update link is clicked, the count
+updates correctly. <br>
+• Finally, there could be a test to make sure that the component gracefully handles
+failure from the API (it currently doesn’t).
+</p>
+<p>
+    For now, let’s not worry about testing the update functionality and just look at the
+initial count.
+</p>
+<p>
+    To test the NotificationCount component, we can create a new Vue instance in
+which NotificationCount is the only child:
+</p>
+<h3>
+    <pre translate="no">
+        const vm = new Vue({
+            template: '&lt;NotificationCount :initial-count="5" /&gt;',
+            components: { NotificationCount }
+           }).$mount();
+    </pre>
+</h3>
+<p>
+    Because we didn’t provide new Vue() with an el property, we need to call .$mount()
+manually so that Vue starts the mounting process. Otherwise, we can’t test our component properly.
+</p>
+<i>vm is short for ViewModel, and is commonly used throughout this
+    book, the vue-test-utils documentation, and the Vue.js documentation itself.</i>
+<p>If you log vm to the console, you can see that it is an object with a ton of properties.
+    The one we care about right now is the $el property, which is the element generated
+    by Vue.</p>
+    <p>Logging vm.$el.outerHTML to the console results in the following:</p>
+<h3>
+    <pre translate="no">
+        &lt;p&gt;
+            Messages: &lt;span class="count"&gt;5&lt;/span&gt;
+            &lt;a&gt;(update)&lt;/a&gt;&lt;/p&gt;
+    </pre>
+</h3>
+<p>
+    We can see that the initial count has displayed properly, but let’s write some code that
+throws an error if it hasn’t so that we don’t have to check the HTML manually every
+time. vm.$el is a standard DOM node, so we can use .querySelector() on it to find
+the .count span:
+</p>
+<h3>
+    <pre translate="no">
+        const count = vm.$el.querySelector('.count').innerHTML;
+if (count !== '5') {
+ thrown new Error('Expected count to equal "5"');
+}
+    </pre>
+</h3>
+
+<p>
+    If we add an assertion library such as Chai, we can simplify the second part into
+something you’re probably more familiar with if you have written tests before:
+</p>
+<h3>
+    <pre translate="no">
+        const count = vm.$el.querySelector('.count').innerHTML;
+expect(count).toBe('5');
+    </pre>
+</h3>
+<p>
+    If the displayed count is anything other than 5 now, an error will be thrown, and the
+test will fail.
+</p>
+<h1>
+    Introducing vue-test-utils
+</h1>
+<p>
+    The syntax in the preceding example is a bit more verbose than it needs to be, and
+that is just a simple example. With more complicated examples involving events and
+mocked components, you almost end up writing more code to test a component than
+is in the component itself! <br>
+vue-test-utils is an official Vue library to assist you writing tests. It provides functionality to perform the repetitive parts of writing Vue components such as querying the
+DOM, setting props and data, mocking components and other properties, and working with events. <br>
+It doesn’t help you with testing running (for that, use a library such as Jest or Mocha)
+or assertions (for that, try Chai or Should.js), so you’ll need to install them separately.
+I don’t cover test runners in this chapter. I’ll just write some code that will throw an
+error if the test fails and assume that there will be something to catch the error. <br>
+To install vue-test-utils, you can use unpckg or another CDN as with the other libraries, but generally you’re going to want to install it from npm:
+</p>
+<h3>
+    <pre translate="no">
+        $ npm install --save-dev vue-test-utils
+    </pre>
+</h3>
+<p>
+    Now, in your test file, you can import vue-test-utils and rewrite the test as follows:
+</p>
+<h3>
+    <pre translate="no">
+        import { mount } from 'vue-test-utils'
+const wrapper = mount(NotificationCount, {
+ propsData: {
+ initialCount: 5
+ }
+});
+const count = wrapper.find('.count').text();
+expect(count).toBe('5');
+    </pre>
+</h3>
+<p>
+    Although this code isn’t any shorter—in fact, it’s pretty much the same length—it’s
+much easier to read. Larger examples are often significantly shorter when written
+using vue-test-utils too.
+</p>
+<h1>Querying the DOM</h1>
+<p>
+    In the previous example, you saw the following expression:
+</p>
+<h3>
+    <pre translate="no">
+        wrapper.find('.count').text()
+    </pre>
+</h3>
+<p>
+    But what is that doing?
+</p>
+<p>
+    First, let’s go back to the mount() function. This function takes the component and
+some options—in this case, just props data—and returns a wrapper, which is an
+object provided by vue-test-utils that wraps a mounted component and allows us to
+run operations on and query the component without having to use the browser’s
+native DOM methods too much.
+</p>
+<p>
+    One of the methods provided by the wrapper is the .find() method, which when
+provided with a selector will query the element that corresponds to the wrapped element and finds the first element in the DOM that matches that selector. Basically, it’s
+the equivalent of .querySelector() on a DOM element. After .find() has located
+the element, it returns that element wrapped in another wrapper—not the element
+itself.
+</p>
+<i>Note that .find() returns only the first element matching the
+    selector. If you want more than one, use .findAll(). This returns a
+    WrapperArray object, not a Wrapper, but it has similar methods,
+    with the addition of an .at() method to return just the element at
+    the given index in a wrapper.
+    </i>
+<p>Now that we have the .count span in a wrapper, we need another method to read the
+    contents of the element to test what it is equal to. There are two methods we could use for this, .html() and .text(), but it’s generally better to use .text() where pos‐
+    sible so we’ll use that here.
+    We now have the contents of the .count span stored in a variable and can test it by
+    using whatever method we prefer.
+    You can use quite a few functions to query the DOM, and they will probably have
+    changed or been added to by the time you read this book, so there’s no point covering
+    them all here; go check out the documentation!</p>
+<h1>mount() Options</h1>
+<p>
+    You saw that we can provide an object as the second argument to mount() and tell
+Vue what props we want the component to have with it, but there’s a lot more we can
+do with it. You can see a full list in the Vue.js and vue-test-utils documentation, but
+here are a few of the most useful:
+</p>
+<p>
+    propsData (as you saw before) is used to pass props to our component:
+</p>
+<h3>
+    <pre translate="no">
+        const wrapper = mount(NotificationCount, {
+            propsData: {
+            initialCount: 5
+            }
+           });
+    </pre>
+</h3>
+<p>
+    slots is used to pass components or HTML strings to the component. Let’s mount
+our blog post component from the “Named Slots” on page 53:
+</p>
+<h3>
+    <pre translate="no">
+        const wrapper = mount(BlogPost, {
+            slots: {
+            default: BlogContentComponent,
+            header: '&lt;h2&gt;Blog post title&lt;/h2&gt;'
+            },
+            propsData: {
+            author: blogAuthor
+            }
+           });
+    </pre>
+</h3>
+<p>
+    mocks is used to add properties to the instance. For example, in the first example in
+this chapter, we used this.$http.get() to send an HTTP request. Let’s create a
+mock for that API:
+</p>
+<h3>
+    <pre translate="no">
+        const wrapper = mount(NotificationsCount, {
+            mocks: {
+            $http: {
+            get() {
+            return Promise.resolve({ messageCount: 2 });
+            }
+            }
+            },
+            propsData: { initialCount: 0
+            }
+           });
+    </pre>
+</h3>
+<p>
+    Now instead of calling an actual API (which would be brittle and far too slow for unit
+tests), calling this.$http.get('/api/new-messages') will return a promise that
+resolves immediately. <br>
+listeners is an object containing functions to be used as event listeners. Often you
+don’t need to use this option, as the emitted property of the wrapper object will suffice, but we’ll explore that in “Working with Events” on page 127:
+</p>
+<h3>
+    <pre translate="no">
+        const wrapper = mount(Counter, {
+            listeners: {
+            count(clicks) {
+            console.log(`Clicked ${clicks} times`);
+            }
+            }
+           });
+    </pre>
+</h3>
+<p>
+    stubs is similar to mocks, but instead of mocking variables, you can use it to stub
+components:
+</p>
+<h3>
+    <pre translate="no">
+        const wrapper = mount(TheSidebar, {
+            stubs: {
+            'sidebar-content': FakeSidebarContent
+            }
+           });
+    </pre>
+</h3>
+<p>
+    As I said, those are just some of the options I’ve found most useful: more are covered
+in the official documentation.
+</p>
+<h1>Mocking and Stubbing Data</h1>
+<p>
+    The previous section briefly covered the mocks option, which allows you to add properties to the instance to mock functionality that has been added to Vue.fn to make it
+accessible everywhere in your Vue instance. We also covered the stubs option, which
+allows you to put in a fake component or HTML instead of having to depend on
+another real component in your tests. Both options reduce the complexity of your
+tests by reducing the number of moving parts that your component is depending on;
+if you break one component, you ideally don’t want all the tests for components
+depending on that component to start failing as well! <br>
+There are also four .set*() methods you can use to set the props, data, computed
+properties, and methods of a component. .setComputed() and .setMethods() are
+great methods for overriding computed properties and methods, possibly simplifying
+what you need to mock that the method would have called later.
+</p>
+<p>
+    Instead of overriding the this.$http.get() function on the NotificationsCount
+method, for example, we could have overridden the entire handleUpdate method to
+increase the message count by two:
+</p>
+<h3>
+    <pre translate="no">
+        const wrapper = mount(NotificationsCount, {
+            propsData: {
+            initialCount: 0
+            }
+           });
+           wrapper.setMethods({
+            handleUpdate() {
+            this.messageCount += 2;
+            }
+           });
+    </pre>
+</h3>
+<p>Be careful when doing this—it can make your tests quite brittle—but when applied
+    carefully, it can be a super useful feature.</p>
+    <p>
+        setComputed() behaves similarly, but you give it a specific value, not a function:
+    </p>
+<h3>
+    <pre translate="no">
+        const wrapper = mount(NumberTotal);
+wrapper.setComputed({
+ numberTotal: 16
+});
+    </pre>
+</h3>
+<h1 translate="no">
+    Working with Events
+</h1>
+<p>
+    Finally, vue-test-utils contains functionality that makes it easier for you to work with
+events. This is where I find vue-test-utils most useful: this isn’t that trivial without the
+library.
+</p>
+<p>
+    First, let’s take a look at how to trigger events on a component. Remember that our
+NotificationCount component had a link to update the message count: let’s write a
+test that clicks that link and then checks that the event has been triggered.
+
+</p>
+<p>
+    To test whether the link has been clicked, let’s mock this.$http with a method that
+returns a promise (as before), but also sets a variable to true to show that it has been
+called:
+</p>
+<h3>
+    <pre translate="no">
+        let clicked = false;
+const wrapper = mount(NotificationsCount, {
+ mocks: {
+ $http: {
+ get() {
+ clicked = true;
+ return Promise.resolve({ messageCount: 1 });
+ }
+ }},
+ propsData: {
+ initialCount: 2
+ }
+});
+    </pre>
+</h3>
+<p>
+    Now, when the update is triggered, clicked should be changed to true.
+</p>
+<p>
+    Wrapper objects have a .trigger() method we can use to trigger a click event:
+</p>
+<h3>
+    <pre translate="no">
+        wrapper.find('a').trigger('click');
+    </pre>
+</h3>
+<p>
+    Now, we can test that clicked is true—if it isn’t, the test should fail:
+</p>
+<h3>
+    <pre>
+        expect(clicked).toBe(true);
+    </pre>
+</h3>
+<p>
+    Finally, let’s look at how we can see which custom events have been fired by components. Every wrapper object stores all the events that have been emitted on it, and you
+can access it by using the .emitted() method. This is super useful and means that
+you don’t have to worry about adding event listeners: they’re all already being captured!
+</p>
+<p>
+    In “Custom Events” on page 56, you met a component called Counter that emits a
+count event containing the number of times it has been clicked every time it is
+clicked. Let’s write a test to check whether the number is accurate:
+</p>
+<h3>
+    <pre translate="no">
+        const wrapper = mount(Counter);
+// Click three times
+wrapper.find('button').trigger('click');
+wrapper.find('button').trigger('click');
+wrapper.find('button').trigger('click');
+const emitted = wrapper.emitted();
+expect(emitted.count).toBeTruthy();
+expect(emitted.count.length).toBe(3);
+expect(emitted.count[0]).toBe(1);
+expect(emitted.count[1]).toBe(2);
+expect(emitted.count[2]).toBe(3);
+    </pre>
+</h3>
+<p>
+    We can see not only what events have been emitted, but also the payload that was
+emitted with them and the order they were emitted in. This is useful when debugging
+components that emit events. <br>
+An emittedByOrder() method behaves similarly but contains an array instead, so
+that you can see the order in which all the events were fired, not just the events with
+the same name.
+</p>
+<h1>Summary</h1>
+<p>
+    In this final chapter, you looked at how to take everything you’ve learned about Vue
+components so far in this book and write unit tests for them using another official
+Vue library called vue-test-utils. The library wraps your Vue components and provides useful methods that allow you to stub and mock components, libraries,. and
+properties, pass in mock data and props, access and manipulate properties of the generated elements, and trigger and capture events.
+</p>
+<h1>Nuxt.js</h1>
+<p>As an alternative to vue-cli, you can use Nuxt.js to set up your Vue applications. It
+    allows you to create a client-side application while abstracting away all the configuration. It sets up Vue, vue-router, vuex, vue-meta (used for easily setting stuff such as
+    page titles), with webpack and Babel. It also sets up server-side rendering, automatic
+    code splitting, CSS preprocessing, static file serving, and a ton of other useful features</p>
+<a href="chap8.html">Vue from React</a>
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

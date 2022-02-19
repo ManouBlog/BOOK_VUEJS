@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Document</title>
+</head>
+<body>
+    <a href="chap3.html">chap3</a>
+    <h1 translate="no"> chapitre4 :Render Functions and JSX</h1>
+    <p>
+        You’ve already seen how to use the template attribute to set the HTML of a component, and you’ve also seen how to use vue-loader to write your component HTML in
+a &lt;template&gt; tag. However, using templates isn’t the only way to indicate what Vue
+should display on the page: you can choose to use a render function instead. This also
+enables you to write JSX in your Vue application, which if you’re from a React background, you may be more comfortable with (although I still recommend giving templates a try!).
+    </p>
+    <i>You can also use the template attribute in your main Vue instance
+        instead of having Vue use the HTML in your Vue element. It’ll be
+        automatically added to the element you specify as the Vue element.</i>
+    <p>
+        When you pass a function to the render property of your Vue instance, the function
+is passed a createElement function, which you can use to indicate the HTML that
+should be output to the page. As a simple example, the following renders &lt;h1&gt;Hello
+world!&lt;/h1&gt; to the page:
+    </p>
+    <h3>
+        <pre translate="no">
+            new Vue({
+                el: '#app',
+                render(createElement) {
+                return createElement('h1', 'Hello world!');
+                }
+               });
+        </pre>
+    </h3>
+    <p>
+        createElement takes three arguments: the tag name of the element to be generated,
+an object containing options (such as HTML attributes, properties, event listeners,
+and class and style bindings), and either a child node or an array of child nodes. The
+tag name is required, and the other two are optional (and if you don’t specify the attributes object, you can specify the children as the second argument). Let’s look at
+each of those individually
+    </p>
+    <h1 translate="no">
+        The Tag Name
+    </h1>
+    <p>
+        The tag name is the simplest argument and the only required one. It can be either a
+string, or a function that returns a string. In the previous example, we’re returning h1,
+so an &lt;h1&gt; element will be created. Render functions also have access to this, so you
+can set the tag name from a property of the data object, prop, computed property, or
+anything like that:
+    </p>
+    <h3>
+        <pre translate="no">
+            new Vue({
+                el: '#app',
+                render(createElement) {
+                return createElement(this.tagName, 'Hello world');
+                },
+                data: {
+                tagName: 'h1'
+                }
+               });
+        </pre>
+    </h3>
+    <p>
+        This capability is a big advantage of render functions over templates, in which it isn’t
+easy or readable to set a tag name dynamically. &lt;{{ tagName }}&gt; is invalid (and still
+not that easy to read!).
+    </p>
+    <h1 translate="no">
+        The Data Object
+    </h1>
+    <p>
+        The data object is where you specify attributes that will affect the component or element. If you were writing a template, that’s everything that goes between the tag name
+and the closing >. For example, with &lt;custom-button type="submit" vbind:text="buttonText"&gt;, the attributes would be type="submit" vbind:text="buttonText".
+    </p>
+    <p>
+        In this example, type is a normal HTML attribute being passed through to the component, and text is a component prop bound to the buttonText variable. For the
+same example using createElement, you could write the following:
+    </p>
+ <h3>
+     <pre translate="no">
+        new Vue({
+            el: '#app',
+            render(createElement) {
+            return createElement('custom-button', {
+            attrs: {
+            type: 'submit'
+            },
+            props: {
+            text: this.buttonText
+            }
+            });
+        }
+    });
+     </pre>
+ </h3>
+ <p>
+    You’ll notice that we’re not using v-bind at all anymore; this is because we can refer to
+    the variable directly as this.buttonText. Because this.buttonText is a dependency
+    of the function, the render function will be called again whenever buttonText is
+    updated and the DOM updated automatically, the same as with templates.
+ </p>
+ <p>
+    See Example 4-1 for all the options required to do everything you’ve learned so far in
+    this book.
+ </p>
+
+
+ <h3>
+     <pre translate="no">
+        {
+            // HTML attributes
+            attrs: {
+            type: 'submit'
+            },
+            // Props to be passed to components
+            props: {
+            text: 'Click me!'
+            },
+            // DOM properties such as innerHTML (instead of v-html)
+            domProps: {
+            innerHTML: 'Some HTML'
+            },
+            // Event listeners
+            on: {
+            click: this.handleClick
+            },
+            // The same as slot="exampleSlot" - used when the component is a child of
+            // another component
+            slot: 'exampleSlot',
+            // The same as key="exampleKey" - used for components generated in a loop
+            key: 'exampleKey',
+            // The same as ref="exampleRef"
+            ref: 'exampleRef',
+            // The same as v-bind:class="['example-class'...
+            class: ['example-class', { 'conditional-class': true }],
+            // The same as v-bind:style="{ backgroundColor: 'red' }"
+            style: { backgroundColor: 'red' }
+           }
+     </pre>
+ </h3>
+ <p>
+    Note that class and style are specified separately from the attrs property. This is
+    because of the v-bind helpers; if you just specify the class or styles as a property of the
+    attrs object, you won’t be able to specify classes as an array or object, or your styles
+    as an object.
+ </p>
+ <p>
+    There are a couple of other properties for things that haven’t been covered in this
+    book: check out the official documentation for a full list.
+ </p>
+ <h3 translate="no">Children</h3>
+ <p>
+    The third and final argument is where you specify the children of the element. This
+    can either be an array or a string. If it’s a string, the specified string will be rendered as
+    the text of the element; and if it’s an array, you can call createElement again inside
+    the array to generate a complicated tree.
+ </p>
+ <i>If you’re specifying children but not the data object, you can pass
+    this as the second argument instead of the third.</i>
+    <p>
+        Let’s take the following template from a previous section:
+    </p>
+    <h3>
+        <pre translate="no">
+            &lt;div&gt;
+                &lt;button v-on:click="counter++"&gt;Click to increase counter&lt;/button&gt;
+                &lt;p&gt;You've clicked the button {{ counter }}&lt;/p&gt; times.
+               &lt;/div&gt;
+        </pre>
+    </h3>
+    <p>
+        To write the same template by using createElement, you’d write the following:
+    </p>
+    <h3>
+        <pre translate="no">
+            render(createElement) {
+                return createElement(
+                'div',
+                [
+                createElement(
+                'button',
+                {
+                on: {
+                click: () => this.counter++,
+                }
+                },
+                'Click to increase counter'
+                ),
+                createElement(
+                'p',
+                `You've clicked the button ${this.counter} times`
+                )
+                ]
+                );
+ }
+        </pre>
+    </h3>
+    <h1>
+        JSX
+    </h1>
+    <p>
+        The previous example seems like a lot of code to do what we did in a four-line template. Luckily, with the help of babel-plugin-transform-vue-jsx, you can write your ren
+der function by using JSX along with the Babel plug-in to compile the JSX into
+createElement calls that Vue understands. Note that internally (and throughout the
+JSX ecosystem), the createElement function is usually aliased to a shorter name, h,
+but you don’t normally need to know that.
+    </p>
+    <p>
+        I won’t cover how to install babel-plugin-transform-vue-jsx here; check out the documentation for the plug-in to see how to do that.
+    </p>
+    <p>
+        After the Babel plug-in has been installed, the previous code can be rewritten like so:
+    </p>
+    <h3>
+        <pre translate="no">
+            render() {
+                return (
+                &lt;div&gt;
+                &lt;button onClick={this.clickHandler}&gt;Click to increase counter&lt;/button&gt;
+                &lt;p&gt;You've clicked the button {counter} times&lt;/p&gt;
+                &lt;/div&gt;
+                );
+                }
+        </pre>
+    </h3>
+    <p>
+        That’s much better. A couple of other nice features of JSX work with Vue too.
+    </p>
+    <p>
+        In addition to being able to import and use components the same way you can in
+templates—by specifying the name of the component as the tag name—it’s also possible to import components the React way too. If the variable the component is imported with begins with a capital letter, you can use it without having to put it in the
+components object or using Vue.component(). For example:
+    </p>
+    <h3>
+        <pre>
+
+            import MyComponent from './components/MyComponent.vue';
+new Vue({
+ el: '#app',
+ render() {
+ return (
+ &lt;MyComponent /&gt;
+ );
+ }
+});
+        </pre>
+    </h3>
+    <p>
+        JSX spread is also supported. Just as with React, you can use the spread operator on
+an object of properties, and it will be merged with the other properties you’ve specified and applied to the element:
+    </p>
+    <h3>
+        <pre>
+            render() {
+                const props = {
+                class: 'world',
+                href: 'https://www.oreilly.com/'
+                };
+                return (
+                &lt;a class="hello" {...props}&gt;O'Reilly Media&lt;/a&gt;
+                );
+                }
+        </pre>
+    </h3>
+<p>
+    This would generate a link to oreilly.com with a class attribute equal to hello world.
+</p>
+<h1>Summary</h1>
+<p>
+    This chapter explained how you can use render functions as an alternative to template strings to build HTML. You do this by using the createElement function, which
+takes three arguments: the tag name, the data object, and the children of the element.
+You can also use JSX instead of calling createElement, using babel-plugin-transformvue-jsx.
+</p>
+<a href="chap5.html">Client-Side Routing with vue-router</a>
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Document</title>
+</head>
+<body>
+    <a href="index.html">chp1</a>
+    <h1 translate="no"> chapitre2 :Components in Vue.js</h1>
+    <p>
+        You’ve seen me mention components a couple of times now, but what is a component? A component is a self-contained piece of code that represents a part of the page.
+Components have their own data, their own JavaScript, and often their own styling.
+They can contain other components, and they can communicate with each other. A
+component could be something as small as a button or an icon, or it could be something bigger, such as a form you reuse a lot throughout your site or an entire page.
+    </p>
+    <p>
+        The main advantage of separating your code into components is that the code
+responsible for each bit of the page is close to the rest of the code for that component.
+No more having to search for a selector in a ton of JavaScript files to see what is
+adding that event listener; the JavaScript is right there next to the HTML! Because
+components are self-contained, you also can make sure that none of the code inside a
+component will affect any other components or have any side effects.
+    </p>
+    <h1 translate="no">
+        Component Basics
+    </h1>
+    <p>
+        Let’s dive right in and demonstrate a simple component:
+    </p>
+    <h3>
+        <pre>
+            const CustomButton = {
+                template: '&lt;button&gt;Custom button&lt;/button&gt;'
+               };
+        </pre>
+    </h3>
+    <p>
+        That’s it. You can then pass this component into your app by using the components
+objects:
+    </p>
+    <h3>
+        <pre>
+            &lt;div id="app"&gt;
+                &lt;custom-button&gt;&lt;/custom-button&gt;
+               &lt;/div&gt;
+               &lt;script&gt;
+                const CustomButton = {
+                template: '&lt;button&gt;Custom button&lt;/button&gt;'};
+ new Vue({
+ el: '#app',
+ components: {
+ CustomButton
+ }
+ });
+&lt;/script&gt;
+        </pre>
+    </h3>
+    <p>
+        This outputs the custom button to the page.
+    </p>
+    <p>
+        You can also register components globally using the Vue.component() method, as follows:
+    </p>
+    <h3>
+        <pre>
+            Vue.component('custom-button', {
+                template: '&lt;button&gt;Custom button&lt;/button&gt;'
+               });
+        </pre>
+    </h3>
+    <p>
+        You can then use the component the same way it was used in the previous example in
+the template, but you don’t need to specify it in the components object anymore; it’s
+available everywhere.
+    </p>
+    <h1 translate="no">Data, Methods, and Computed Properties</h1>
+    <p>Each component can have its own data, methods, computed properties, and everything you’ve seen previously—just like the Vue instance itself. The object to define a
+        component is similar to the object we used to define the Vue instance, and you can
+        use it the same in a lot of ways. For example, let’s define and globally register a component with some data and a computed property:</p>
+    <h3>
+        <pre>
+            Vue.component('positive-numbers', {
+                template: '&lt;p&gt;{{ positiveNumbers.length }} positive numbers&lt;/p&gt;',
+                data() {
+                return {
+                numbers: [-5, 0, 2, -1, 1, 0.5]
+                };
+                },
+                computed: {
+                positiveNumbers() {
+                return this.numbers.filter((number) => number >= 0);
+                }
+                }
+               });
+        </pre>
+    </h3>
+    <p>
+        We can then use it as &lt;positive-numbers&gt;&lt;/positive-numbers&gt; anywhere in our
+Vue templates.
+    </p>
+    <p>
+        You might have noticed one subtle difference between a component and the Vue
+instance: whereas the data property on your Vue instance is an object, the data property on components is a function. This is because you can use a component multiple
+    </p>
+    <p>
+        times on the same page, and you probably don’t want them sharing a data object—
+imagine if you clicked a button, and the button on the other side of the page responded as well! For this reason, the data property should be a function that Vue will call
+when the component is initialized in order to generate the data object. If you forget to
+make the data property a function on a component, Vue will throw a warning.
+    </p>
+    <h1 translate="no">Passing in Data</h1>
+    <p>
+        Components are useful, but they really show their power when you start passing data
+into them. You can pass data into a component by using props. Take the following
+example:
+    </p>
+    <h3>
+        <pre>
+            &lt;div id="app"&gt;
+                &lt;color-preview color="red"&gt;&lt;/color-preview&gt;
+                &lt;color-preview color="blue"&gt;&lt;/color-preview&gt;
+               &lt;/div&gt;
+               &lt;script&gt;
+                Vue.component('color-preview', {
+                template: '&lt;div class="color-preview" :style="style"&gt;&lt;/div&gt;',
+                props: ['color'],
+                computed: {
+                style() {
+                return { backgroundColor: this.color };
+                }
+                }
+                });
+                new Vue({
+                el: '#app'
+                });
+               &lt;/script&gt;
+        </pre>
+    </h3>
+    <p>
+        The props are passed into the components as attributes on the HTML (color="red",
+for example); then in the component, the props property indicates the names of the
+props that can be passed into the component—in this case, just a color. Then in the
+component we can access the value of the prop by using this.color.
+    </p>
+    <p>
+        The HTML output for the preceding code is as follows:
+    </p>
+    <h3>
+        <pre>
+            &lt;div id="app"&gt;
+                &lt;div class="color-preview" style="background-color: red"&gt;&lt;/div&gt;
+                &lt;div class="color-preview" style="background-color: blue"&gt;&lt;/div&gt;
+               &lt;/div&gt;
+        </pre>
+    </h3>
+    <h1 translate="no">Prop Validation</h1>
+    <p>
+        Instead of passing in a simple array containing the names of the props your component can receive, it’s also possible to pass an object containing information about the props, such as their types, whether they’re required, default values, and custom vali‐
+        dator functions for more advanced validation.
+    </p>
+    <p>
+        To specify the type of a prop, pass it a native constructor such as Number, String, or
+Object, or a custom constructor function that will be checked with instanceof. For
+example:
+    </p>
+    <h3>
+        <pre>
+            Vue.component('price-display', {
+                props: {
+                price: Number,
+                unit: String
+                }
+               });
+        </pre>
+    </h3>
+    <p>
+        If price is anything other than a number, or unit is anything other than a string, Vue
+will throw a warning.
+    </p>
+    <p>
+        If a prop can be one of multiple types, you can pass in all the valid types in an array,
+such as price: [Number, String, Price] (where Price is a custom constructor
+function).
+    </p>
+    <p>
+        You can also specify whether a prop is required, or give it a default value if one isn’t
+specified. To do that, specify an object instead of a constructor as before, and pass in
+the type as the type property of that object:
+    </p>
+    <h3>
+        <pre>
+            Vue.component('price-display', {
+                props: {
+                price: {
+                type: Number,
+                required: true
+                },
+                unit: {
+                type: String,
+                default: '$'
+                }
+                }
+               });
+        </pre>
+    </h3>
+    <p>
+        In that example, price is a required prop, and a warning will be thrown if it isn’t
+specified. unit isn’t required, but has a default value of $, so if you don’t pass in any
+value, this.unit will equal $ inside the component.
+    </p>
+    <p>
+        Finally, you can pass in a validator function that will be passed the value of the prop
+and should return true if the prop is valid, or false if it is not. For example, the following example validates whether the number is above zero so that you can’t accidentally give things negative prices:
+    </p>
+    <h3>
+        <pre>
+            price: {
+                type: Number,
+                required: true,
+                validator(value) {return value >= 0;
+                }
+                }
+        </pre>
+    </h3>
+    <h1 translate="no">Casing of Props</h1>
+    <p>
+        Vue handles the casing of props in a nice way: you probably want to use kebab case
+(my-prop="") only in your HTML, but you probably don’t want to refer to your props
+as this[my-prop] in your JavaScript. Camel case (this.myProp) is much nicer to type
+and read
+    </p>
+    <p>
+        Luckily, Vue handles this for you. Props specified as kebab case in your HTML are
+automatically converted to camel case in your component:
+    </p>
+    <h3>
+        <pre>
+            &lt;div id="app"&gt;
+                &lt;price-display percentage-discount="20%"&gt;&lt;/price-display&gt;
+               &lt;/div&gt;
+               &lt;script&gt;
+                Vue.component('price-display', {
+                props: {
+                percentageDiscount: Number
+                }
+                });
+                new Vue({
+                el: '#app'
+                });
+               &lt;/script&gt;
+        </pre>
+    </h3>
+    <p>
+        That works as expected without having to do any work ourselves.
+    </p>
+    <h1 translate="no">Reactivity</h1>
+    <p>
+        You’ve seen that when the value of the data object, method, or computed property
+changes, the template is updated too, and this also works for props. v-bind can be
+used when setting the prop on the parent to bind it to a value, and then whenever
+that value changes, anywhere it is used in the component is also updated.
+    </p>
+    <p>
+        For a simple example of this, let’s make a component that displays a number given to
+it as a prop:
+    </p>
+    <h3>
+        <pre>
+            Vue.component('display-number', {
+                template: '&lt;p&gt;The number is {{ number }}&lt;/p&gt;',
+                props: {
+                number: {
+                type: Number,
+                required: true
+                }
+                }
+               });
+        </pre>
+    </h3>
+    <p>
+        Then let’s display this on the page with a value that increases by one every second:
+    </p>
+    <h3>
+        <pre>
+            &lt;div id="app"&gt;
+                &lt;display-number v-bind:number="number"&gt;&lt;/display-number&gt;
+               &lt;/div&gt;
+               &lt;script&gt;
+                new Vue({
+                el: '#app',
+                data: {
+                number: 0
+                },
+                created() {
+                setInterval(() =&gt; {
+                this.number++;
+                }, 1000);
+                }
+                });
+               &lt;/script&gt;
+        </pre>
+    </h3>
+    <p>
+        The number passed to the display-number component is increasing by one every
+second (remember, the created function runs when the instance is created), and so
+the prop is changing once a second. Vue is clever enough to know this, and so it
+updates the page.
+    </p>
+    <p>
+        Using v-bind is required when passing in anything other than
+strings. The following will throw a warning:
+    </p>
+    <h3>
+        <pre>
+            &lt;display-number number="10"&gt;&lt;/display-number&gt;
+        </pre>
+    </h3>
+    <p>
+        This is because the value is being passed in as a string, not a number. To pass the number in, add v-bind to evaluate it as an expression before it is passed in:
+    </p>
+    <h3>
+        <pre>
+            &lt;display-number v-bind:number="10"&gt;&lt;/display-number&gt;
+        </pre>
+    </h3>
+    <h1 translate="no">Data Flow and the .sync Modifier</h1>
+    <p>
+        Data is passed to a child from a parent via a prop, and when that data is updated in
+the parent, the prop passed to the child is updated. However, you cannot modify the
+prop from the child component. This is known as a one-way-down binding, and prevents components from perhaps unintentionally mutating a parent’s state.
+    </p>
+    <p>
+        However, two-way data binding can be useful in some cases. If you want to use twoway data binding, you can use a modifier to achieve it: the .sync modifier. It’s just
+syntactical sugar. Take the following code:
+    </p>
+    <h3>
+        <pre>
+            &lt;count-from-number
+ :number.sync="numberToDisplay"
+ /&gt;
+        </pre>
+    </h3>
+    <p>
+        This code is the equivalent of the following:
+    </p>
+    <h3>
+        <pre>
+            &lt;count-from-number
+ :number="numberToDisplay"
+ @update:number="val => numberToDisplay = val"
+ /&gt;
+        </pre>
+    </h3>
+    <p>
+        So, in order to change the value in the parent component, you need to emit the
+update:number event, where the argument—in this case, number—is the name of the
+value to be updated
+    </p>
+    <p>
+        Let’s look at how we can make a CountFromNumber component that takes an initial
+value and then counts up from it, also updating the parent value:
+    </p>
+    <h3>
+        <pre>
+            Vue.component('count-from-number', {
+                template: '&lt;p&gt;The number is {{ number }}&lt;/p&gt;',
+                props: {
+                number: {
+                type: Number,
+                required: true
+                }
+                },
+                mounted() {
+                setInterval(() => {
+                this.$emit('update:number', this.number + 1);
+                }, 1000);
+                }
+               });
+        </pre>
+    </h3>
+    <p>
+        The local value isn’t being changed at all, but the component is changing the parent
+value that is being passed back down to the component.
+    </p>
+    <p>
+        In some cases, it might be beneficial to wrap the emit logic in a computed property,
+like so:
+    </p>
+    <h3>
+        <pre>
+            Vue.component('count-from-number', {
+                template: '&lt;p&gt;The number is {{ localNumber }}&lt;/p&gt;',
+                props: {
+                number: {
+                type: Number,
+                required: true
+                }
+                },
+                computed: {
+                localNumber: {
+                get() {
+                return this.number;
+                },
+                set(value) {
+                this.$emit('update:number', value);
+                }
+                }
+                },
+                mounted() {
+                    setInterval(() => {
+                    this.localNumber++;
+                    }, 1000);
+                    }
+                   });
+        </pre>
+    </h3>
+    <p>
+        Now, localNumber is effectively the same as number. It gets the value from the prop,
+and when it is updated, it emits the event to update the value in the parent component (where it will then be passed back down again as the updated value).
+    </p>
+    <h4>Be careful of infinite loops when you’re doing this: if both the parent and child components are reacting to changes and changing the
+        value again, it will break your app!</h4>
+        <p>
+            If you just want to update the value passed in as a prop and don’t care about updating
+the value on the parent component, you can copy the value from the prop into the
+data object by referring to this in the initial data function, like so:
+        </p>
+        <h3>
+            <pre>
+                Vue.component('count-from-number', {
+                    template: '&lt;p&gt;The number is {{ number }}&lt;/p&gt;',
+                    props: {
+                    initialNumber: {
+                    type: Number,
+                    required: true
+                    }
+                    },
+                    data() {
+                    return {
+                    number: this.initialNumber
+                    };
+                    },
+                    mounted() {
+                    setInterval(() => {
+                    this.number++;
+                    }, 1000);
+                    }
+                   }),
+            </pre>
+        </h3>
+        <p>
+            Note that if you do this, the component won’t update when the prop value updates,
+because it will be referring to a different value. If you want to restart the counter from
+the new number provided, add a watcher for initialNumber that will copy the new
+value across to number.
+        </p>
+        <h1 translate="no">Custom Inputs and v-model</h1>
+        <p>
+            Similarly to the .sync operator, it’s possible to use v-model on your components in
+order to create custom inputs. Once again, it’s syntactical sugar. Look at the following
+code:
+        </p>
+        <h3>
+            <pre translate="no">
+                &lt;input-username
+ v-model="username"
+ /&gt;
+            </pre>
+        </h3>
+        <p>
+            That code is the equivalent of this:
+        </p>
+        <h3>
+            <pre>
+                &lt;input-username
+ :value="username"
+ @input="value => username = value"
+ /&gt;
+            </pre>
+        </h3>
+        <p>
+            So, to create our InputUsername component, we need it to do two things: first, it
+needs to read the initial value from the value prop, and then it needs to emit an
+input event whenever the value is changed. For the sake of this example, let’s also
+make the component lowercase the values before it emits them.
+        </p>
+        <p>
+            We can’t use either of the approaches (emitting the event in order to change the value
+or using a computed property) that worked in the previous section. Instead, we have
+to listen to the input event on the input:
+        </p>
+        <h3>
+            <pre translate="no">
+                Vue.component('input-username', {
+                    template: `&lt;input type="text" :value="value" @input="handleInput"&gt;`,
+                    props: {
+                    value: {
+                    type: String,
+                    required: true
+                    }
+                    },
+                    methods: {
+                    handleInput(e) {
+                    const value = e.target.value.toLowerCase();
+                    // If value was changed, update it on the input too
+                    if (value !== e.target.value) {
+                    e.target.value = value;
+                    }
+                    this.$emit('input', value);
+                    }
+                    }
+                   });
+            </pre>
+        </h3>
+        <p>
+            Now you can use this component just as you would an input element: using v-model
+will behave the same. The only difference is that you can’t use capital letters!
+        </p>
+        <i>
+            The preceding example has a problem: if you type an uppercase letter, the cursor will be moved to the end of the string. This is fine
+when someone is entering a username for the first time, but if
+they’re going back to change it, their cursor will seem to jump
+about.
+It’s an easy enough problem to solve, but beyond the scope of the
+previous example; before setting e.target.value, store the current
+cursor position, and set it again after you’ve made the change.
+        </i>
+        <h1 translate="no">Passing Content into Components with Slots</h1>
+        <p>
+            In addition to passing data into components as props, Vue lets you pass HTML into
+them too. For example, let’s say you want to create a custom button element. You
+could use an attribute to set the text:
+        </p>
+        <h3>
+            <pre>
+                &lt;custom-button text="Press me!"&gt;&lt;/custom-button&gt;
+            </pre>
+        </h3>
+        <p>
+            That would work, but it’s much more natural like this:
+        </p>
+        <h3>
+            <pre translate="no">
+                &lt;custom-button&gt;Press me!&lt;/custom-button&gt;
+            </pre>
+        </h3>
+        <p>
+            To use this content inside the component, you can use the &lt;slot&gt; tag as follows:
+        </p>
+        <h3>
+            <pre>
+                Vue.component('custom-button', {
+                    template: '&lt;button class="custom-button"&gt;&lt;slot&gt;&lt;/slot&gt;&lt;/button&gt;'
+                   });
+            </pre>
+        </h3>
+        <p>
+            Then, the following HTML will be generated:
+        </p>
+        <h3>
+            <pre>
+                &lt;button class="custom-button"&gt;Press me!&lt;/button&gt;
+            </pre>
+        </h3>
+        <p>
+            In addition to passing in strings, you can pass in any HTML you like; you can even
+pass in other Vue components. This allows you to create complicated documents
+without any of your components getting too big. For example, you could divide your
+page into a header component, a sidebar component, and a content component and
+write your template something like this:
+        </p>
+        <h3>
+            <pre>
+                &lt;div class="app"&gt;
+                    &lt;site-header&gt;&lt;/site-header&gt;
+                    &lt;div class="container"&gt;
+                    &lt;site-sidebar&gt;
+                    ...sidebar content goes here...
+                    &lt;/site-sidebar&gt;
+                    &lt;site-main&gt;
+                    ...main content goes here...
+                    &lt;/site-main&gt;
+                    &lt;/div&gt;
+                   &lt;/div&gt;
+            </pre>
+        </h3>
+        <p>
+            This is a nice way of structuring sites, especially after you start using scoped CSS and
+vue-router, which are introduced later in the book.
+        </p>
+        <h3>Fallback Content</h3>
+        <p>
+            If you specify content inside the &lt;slot&gt; element, it will be used as fallback content
+                when content isn’t passed to the component. Let’s give our &lt;custom-button&gt; component seen previously some default text as a fallback component:
+        </p>
+        <h3>
+            <pre translate="no">
+                Vue.component('custom-button', {
+                    template: `&lt;button class="custom-button"&gt;
+                    &lt;slot&gt;&lt;span class="default-text"&gt;Default button text&lt;/span&gt;&lt;/slot&gt;
+                    &lt;/button&gt;`
+                   });
+            </pre>
+        </h3>
+    <p>
+        Writing HTML inside the template string is getting unwieldy, so let’s see that example
+again, but in an HTML block:
+    </p>
+    <h3>
+        <pre>
+            &lt;button class="custom-button"&gt;
+                &lt;slot&gt;
+                &lt;span class="default-text"&gt;Default button text&lt;/span&gt;
+                &lt;/slot&gt;
+               &lt;/button&gt;
+        </pre>
+    </h3>
+    <p>
+        You can see that in addition to having default text, the text is also wrapped in a span
+element with the default-text class. This is completely optional—you don’t have to
+have a tag surrounding the content in a slot component or in the fallback content;
+you can use any HTML you want.
+    </p>
+    <p>
+        I cover how to separate your HTML from the component object in “vue-loader
+and .vue Files” on page 61. Using the template attribute works in only very simple
+examples.
+    </p>
+    <h1 translate="no">
+        Named Slots
+    </h1>
+    <p>
+        In the previous section, you saw single slots. They’re probably the most commonly
+used kind of slots and are certainly the simplest to understand: content passed to the
+component is output as the &lt;slot&gt; component inside the element.
+    </p>
+    <p>
+        There are also named slots. Named slots have—you guessed it—a name, which allows
+you to have multiple slots in the same component.
+    </p>
+    <p>
+        Let’s say we have a simple blog post component with a header (usually a title, but
+maybe sometimes other things) and some text. The component could have the following template:
+    </p>
+    <h3>
+        <pre translate="no">
+            &lt;section class="blog-post"&gt;
+                &lt;header&gt;
+                &lt;slot name="header"&gt;&lt;/slot&gt;
+                &lt;p&gt;Post by {{ author.name }}&lt;/p&gt;
+            &lt;/header&gt;
+            &lt;main&gt;
+            &lt;slot&gt;&lt;/slot&gt;
+            &lt;/main&gt;
+           &lt;/section&gt;
+        </pre>
+    </h3>
+    <p>
+        Then when we call the component in our template, we can use the slot attribute to
+say that a given element should be used as the header slot. The rest of the HTML will
+be used as the unnamed slot:
+    </p>
+    <h3>
+        <pre translate="no">
+            &lt;blog-post :author="author"&gt;
+                &lt;h2 slot="header"&gt;Blog post title&lt;/h2&gt;
+                &lt;p&gt;Blog post content&lt;/p&gt;
+                &lt;p&gt;More blog post content&lt;/p&gt;
+               &lt;/blog-post&gt;
+        </pre>
+    </h3>
+    <p>
+        The generated HTML looks like the following:
+    </p>
+    <h3>
+        <pre>
+            &lt;section class="blog-post"&gt;
+                &lt;header&gt;
+                &lt;h2&gt;Blog post title&lt;/h2&gt;
+                &lt;p&gt;Post by Callum Macrae&lt;/p&gt;
+                &lt;/header&gt;
+                &lt;main&gt;
+                &lt;p&gt;Blog post content&lt;/p&gt;
+                &lt;p&gt;More blog post content&lt;/p&gt;
+                &lt;/main&gt;
+               &lt;/section&gt;
+        </pre>
+    </h3>
+    <h1 translate="no">Scoped Slots</h1>
+       <p>
+        It’s possible to pass data back into our slot components so that we can access component data in the parent component’s markup
+       </p>
+    <p>
+        Let’s make a component that gets user information, but leaves the display of it to the
+parent element:
+    </p>
+    <h3>
+        <pre translate="no">
+            Vue.component('user-data', {
+                template: '&lt;div class="user"&gt;&lt;slot :user="user"&gt;&lt;/slot&gt;&lt;/div&gt;',
+                data: () => ({
+                user: undefined,
+                }),
+                mounted() {
+                // Set this.user...
+                }
+               });
+        </pre>
+    </h3>
+    <p>
+        Any properties passed to &lt;slot&gt; will be available on a variable defined in the slotscope property. Let’s call this component and display the user information with our
+            own HTML:
+    </p>
+    <h3>
+        <pre translate="no">
+            &lt;div&gt;
+                &lt;user-data slot-scope="user"&gt;
+                &lt;p v-if="user"&gt;User name: {{ user.name }}&lt;/p&gt;
+                &lt;/user-data&gt;
+               &lt;/div&gt;
+        </pre>
+    </h3>
+    <p>
+        This functionality combined with named slots can be useful for overriding the styling
+of an element. Let’s take a component that displays a list of blog post summaries:
+    </p>
+    <h3>
+        <pre translate="no">
+            &lt;div&gt;
+                &lt;div v-for="post in posts"&gt;
+                &lt;h1&gt;{{ post.title }}&lt;/h1&gt;
+                &lt;p&gt;{{ post.summary }}&lt;/p&gt;
+                &lt;/div&gt;
+               &lt;/div&gt;
+        </pre>
+    </h3>
+    <p>
+        Pretty simple. It takes an array of posts as posts, and then outputs all the post titles
+and summaries. To use it, we can do this:
+    </p>
+    <h3>
+        <pre translate="no">
+            &lt;blog-listing :posts="posts"&gt;&lt;/blog-listing&gt;
+        </pre>
+    </h3>
+    <p>
+        Let’s create a version of this in which we can pass in our own HTML to display the
+post summary—maybe, for example, on one page we want to display images instead.
+We need to wrap the paragraph element for the summary in a named slot element,
+which we can then override if we choose to.
+    </p>
+    <p>
+        Our new component looks like this:
+    </p>
+    <h3>
+        <pre translate="no">
+            &lt;div&gt;
+                &lt;div v-for="post in posts"&gt;
+                &lt;h1&gt;{{ post.title }}&lt;/h1&gt;
+                &lt;slot name="summary" :post="post"&gt;
+                &lt;p&gt;{{ post.summary }}&lt;/p&gt;
+                &lt;/slot&gt;
+                &lt;/div&gt;
+               &lt;/div&gt;
+        </pre>
+    </h3>
+    <p>
+        Now, the original way we used the component still works fine, because the paragraph
+element is still available as a fallback if no slot element is provided, but if we choose
+to, we can override the post summary element.
+    </p>
+    <p>
+        Let’s override the summary to display an image instead of the post summary:
+    </p>
+   <h3>
+       <pre translate="no">
+        &lt;blog-listing :posts="posts"&gt;
+            &lt;img
+            slot="summary"
+            slot-scope="post"
+            :src="post.image"
+            :alt="post.summary"&gt;
+        &lt;/blog-listing&gt;
+       </pre>
+   </h3>
+<p>
+    Now the image element is used instead of the text element. We provided the post
+summary as the alternate text for the image, though; this is important so that users
+using assistive technology such as screen readers still know what the blog post is
+about.
+</p>
+<h4 translate="no">Slot scope destructuring</h4>
+<p>
+    As a neat shortcut, you can treat the slot-scope argument as if it were a function
+argument, so you can use destructuring.
+</p>
+<p>
+    Let’s rewrite the previous example to use destructuring:
+</p>
+<h3>
+    <pre>
+        &lt;blog-listing :posts="posts"&gt;
+            &lt;img
+            slot="summary"
+            slot-scope="{ image, summary }"
+            :src="image"
+            :alt="summary"&gt;
+           &lt;/blog-listing&gt;
+    </pre>
+</h3>
+<h1 translate="no">
+    Custom Events 
+</h1>
+<p>
+    In addition to working with native DOM events, v-on works with custom events that
+you can emit from your components. To fire a custom event, use the this.$emit()
+method with the name of the event and any arguments you want to pass. Then you
+can use v-on on the component to listen to the event.
+</p>
+<p>
+    The following is a simple component that emits an event called count every time it is
+clicked:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;div id="app"&gt;
+            &lt;button @click="handleClick"&gt;Clicked {{ clicks }} times&lt;/button&gt;
+           &lt;/div&gt;
+           &lt;script&gt;
+            new Vue({
+            el: '#app',
+            data: () =&gt; ({
+            clicks: 0
+            }),
+            methods: {
+            handleClick() {
+            this.clicks++;
+            this.$emit('count', this.clicks);
+            }
+            }
+        });
+    &lt;/script&gt;
+    </pre>
+</h3>
+<p>
+    Every time the button is clicked, it fires the count event, and as an argument, the
+number of times the button has been clicked.
+</p>
+<p>
+    Then when we use the component, we can use v-on with the custom event just as we
+used v-on before with the click event to listen to the event. The following example
+takes the number that the counter emits and displays it to the page:
+</p>
+
+<h3>
+    <pre translate="no">
+        &lt;div id="app"&gt;
+            &lt;counter v-on:count="handleCount"&gt;&lt;/counter&gt;
+            &lt;p&gt;clicks = {{ clicks }}&lt;/p&gt;
+           &lt;/div&gt;
+           &lt;script&gt;
+            const Counter = {
+            // component here
+            };
+            new Vue({
+            el: '#app',
+            data: {
+            clicks: 0,
+            },
+            methods: {
+            handleCount(clicks) {
+            this.clicks = clicks;
+            }
+            },
+            components: {
+            Counter
+            }
+            });
+           &lt;/script&gt;
+    </pre>
+</h3>
+<p>
+    When working inside a component, we can also listen to events that are being dispatched by that same component by using the $on method. It works pretty much the
+same as any event dispatcher: when you fire an event by using $emit, your event handler that was added using $on is triggered. You can’t use this.$on to listen to events
+fired by child components; either use v-on on the component or use a ref on the component to call .$on on the component itself:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;div id="app"&gt; t
+            &lt;counter ref="counter"&gt; t&lt;/counter&gt; t
+           &lt;/div&gt; t
+           &lt;script&gt; t
+            // Incomplete component for brevity
+            new Vue({
+            el: '#app',
+            mounted() {this.$refs.counter.$on('count', this.handleCount);
+ }
+ });
+&lt;/script&gt; t
+    </pre>
+</h3>
+<p>
+    There are also two more methods for working with events: $once and $off. $once
+behaves the same as $on, but is fired only once—the first time the event is fired—and
+$off is used to remove an event listener. Both methods behave similarly to your standard event emitters such as EventEmitter in Node.js and the .on(), .once(), .off(),
+and .trigger() methods in jQuery
+</p>
+<p>
+    Because Vue has a full event emitter built in, when you’re using Vue, there is no need
+to import your own event emitter. Even when you’re writing code as part of a Vue
+component, you can still take advantage of the Vue event emitter by creating a new
+instance using new Vue(). See the following example:
+</p>
+<h3>
+    <pre translate="no">
+        const events = new Vue();
+let count = 0;
+function logCount() {
+ count++;
+ console.log(`Debugger function called ${count} times`);
+}
+events.$on('test-event', logCount);
+setInterval(() => {
+ events.$emit('test-event');
+}, 1000);
+setTimeout(() => {
+ events.$off('test-event');
+}, 10000);
+    </pre>
+</h3>
+<p>
+    This code logs to the console once a second for 10 seconds until the event handler is
+removed by .$off().
+
+</p>
+<p>
+    This is especially useful for getting your Vue code to communicate with your nonVue code—although it’s generally better to use vuex instead if it’s available.
+</p>
+<h2 translate="no">Mixins</h2>
+<p>
+    Mixins are a way of storing code to be reused across multiple elements. For example,
+let’s say you have numerous components for displaying different types of users.
+Although most of what you want to display will depend on the type of user, a fair
+chunk of the logic will be common between the components. You can take three
+approaches here: you can have duplicate code across all the components (obviously
+not a good idea); you can take the common code, split it into functions, and store it
+in a util file; or you can use a mixin. The last two approaches are fairly similar in this example, but using a mixin is the more Vue way to do it—and in a lot of other exam‐
+ples that we’ll be covering in this section, can be a lot more powerful.
+</p>
+
+
+<p>
+    Anything stored on the mixin will also be available on the component that the mixin
+is added to. Let’s create a mixin that adds a method called getUserInformation() to
+the components it is added to:
+</p>
+<h3>
+    <pre translate="no">
+        const userMixin = {
+            methods: {
+            getUserInformation(userId) {
+            return fetch(`/api/user/${userId}`)
+            .then((res) => res.json);
+            }
+            }
+           }; 
+    </pre>
+</h3>
+<p>
+    Now you can add it in a component and use it like this:
+</p>
+<h3>
+    <pre translate="no">
+        import userMixin from './mixins/user';
+Vue.component('user-admin', {
+ mixins: [userMixin],
+ template: '&lt;div v-if="user"&gt;Name: {{ user.name }}&lt;/div&gt;',
+ props: {
+ userId: {
+ type: Number
+ }
+ }
+ data: () => ({
+ user: undefined
+ }),
+ mounted() {
+ this.getUserInformation(this.userId)
+ .then((user) => {
+ this.user = user;
+ });
+ }
+});
+    </pre>
+</h3>
+<p>
+    Vue will automatically have added the method to the component—it has been
+“mixed” in.
+</p>
+<p>
+    In addition to methods, mixins are able to access pretty much anything the Vue component can, as if it were part of the component itself. For example, let’s change the
+mixin so that it is responsible for the storage of the data and the mounted hook:
+</p>
+<h3>
+    <pre translate="no">
+        const userMixin = {
+            data: () => ({
+            user: undefined
+            }),
+            mounted() {
+            fetch(`/api/user/${this.userId}`)
+            .then((res) => res.json())
+            .then((user) => {
+                this.user = user;
+                });
+                }
+    </pre>
+</h3>
+<p>
+    Now the component can be simplified to this:
+</p>
+<h3>
+    <pre>
+        import userMixin from ./mixins/user';
+        Vue.component('user-admin', {
+            mixins: [userMixin],
+            template: '&lt;div v-if="user"&gt;Name: {{ name.user }}&lt;/div&gt;',
+            props: {
+            userId: {
+            type: Number
+            }
+            }
+           });
+    </pre>
+</h3>
+<p>
+    Although the component has been made a lot simpler, knowing where the data is
+coming from could become confusing. You need to consider this trade-off when
+deciding what to put in your mixins and what to put in your components.
+</p>
+<h1 translate="no">
+    Merging Mixins and Components
+</h1>
+<p>
+    If a mixin and a component have duplicate keys—for example, if they both have a
+method called addUser() or they both use the created() hook—Vue handles them
+differently, depending on what they are.
+</p>
+<p>
+    For life-cycle hooks—for example, created() or beforeMount()—Vue adds them to
+an array and runs both of them:
+</p>
+<h3>
+    <pre translate="no">
+        const loggingMixin = {
+            created() {
+            console.log('Logged from mixin');
+            }
+           };
+           Vue.component('example-component', {
+            mixins: [loggingMixin],
+            created() {
+            console.log('Logged from component');
+            }
+           });
+    </pre>
+</h3>
+<p>
+    When that component is created, both “Logged from mixin” and “Logged from component” will be logged to the console.
+</p>
+<p>
+    For duplicate methods, computed properties, or anything else that isn’t a life-cycle
+hook, the property from the component will override the property from the mixin.
+</p>
+<p>
+    For example:
+</p>
+<h3>
+    <pre translate="no">
+        const loggingMixin2 = {
+            methods: {
+            log() {
+            console.log('Logged from mixin');
+            }
+            }
+           };
+           Vue.component('example-component' {
+            mixins: [loggingMixin2],
+            created() {
+            this.log();
+            },
+            methods: {
+            log() {
+            console.log('Logged from component');
+            }
+            }
+           };
+    </pre>
+</h3>
+<p>
+    Now when the console is created, only “Logged from component” is logged, as the
+log() method from the component has overridden the log() method from the
+mixin.
+</p>
+<p>
+    Sometimes this behavior might be intentional, but sometimes you might have accidentally named two methods in different places the same thing, which could lead to
+issues if one of them is overridden! For this reason, the official Vue Style Guide recommends that for private properties in mixins (methods, data, and computed properties that aren’t supposed to be used outside the mixin), you should prefix their
+names with $yourMixinName. The log() method in the previous mixin would
+become $_loggingMixin2_log(). This is especially important when writing plug-ins,
+as users will be adding your plug-in to their own code.
+</p>
+<h1 translate="no">vue-loader and .vue Files</h1>
+<p>
+    In “Installation and Setup” on page 3, I discussed how to install Vue, and briefly covered how to set up vue-loader. Writing components by using Vue.component() or
+storing them as objects can be a bit messy, and with more complicated components,
+you don’t really want to be writing a ton of HTML in the template property of the
+component. vue-loader adds a way to write one component per file in a logical and
+easy-to-understand syntax in .vue files.
+</p>
+<p>
+    If you’ve set up vue-loader, you can take this component you saw previously:
+</p>
+<h3>
+    <pre>
+        Vue.component('display-number', {
+            template: '&lt;p&gt;The number is {{ number }}&lt;/p&gt;',
+            props: { number: {
+                type: Number,
+                required: true
+                }
+                }
+               });
+    </pre>
+</h3>
+<p>
+    And turn it into this:
+</p>
+<h3>
+    <pre>
+        &lt;template&gt;
+            &lt;p&gt;The number is {{ number }}&lt;/p&gt;
+           &lt;/template&gt;
+           &lt;script&gt;
+            export default {
+            props: {
+            number: {
+            type: Number,
+            required: true
+            }
+            }
+            };
+           &lt;/script&gt;
+    </pre>
+</h3>
+<p>
+    If you save that as display-number.vue, you can then import it into your application
+and use it as if you had defined it by using the object syntax:
+</p>
+<h3>
+    <pre>
+        &lt;div id="app"&gt;
+            &lt;display-number :number="4"&gt;&lt;/display-number&gt;
+           &lt;/div&gt;
+           &lt;script&gt;
+            import DisplayNumber from './components/display-number.vue';
+            new Vue({
+            el: '#app',
+            components: {
+            DisplayNumber
+            }
+            });
+           &lt;/script&gt;
+    </pre>
+</h3>
+<p>
+    After being processed by webpack and vue-loader, that code will work just like the
+previous example with the display-number component. It won’t work at all in the
+browser; you need to use a preprocessor for this.
+</p>
+<p>
+    Splitting your components into files makes your code a lot easier to manage. Instead
+of having one large file with all your components, you can store them in files in relevantly named directories—perhaps named by the section of the site they’re used on,
+or by the type or size of the component.
+</p>
+<h1 translate="no">Non-prop Attributes</h1>
+<p>
+    If you specify an attribute on a component that isn’t used a prop, it’s added to the root
+HTML element of the component. For instance, let’s say we want to add a class to the
+&lt;display-number&gt; component in the previous example. You can add it to the location where you call the component:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;display-number class="some-class" :number="4"&gt;&lt;/display-number&gt;
+    </pre>
+</h3>
+<p>
+    The following is the output:
+</p>
+<h3>
+    <pre>
+        &lt;p class="some-class"&gt;The number is 4&lt;/p&gt;
+    </pre>
+</h3>
+<p>
+    This works with any HTML property or attribute, not just class. <br>
+What happens if we specify the same attribute on both the component and root element of the component? Most of the time, if we specify the same attribute in both
+places, the attribute on the component will overwrite the attribute specified in the
+component template. For example, let’s take the following code example:
+</p>
+<h3>
+    <pre>
+        &lt;div id="app"&gt;
+            &lt;custom-button type="submit"&gt;Click me!&lt;/custom-button&gt;
+           &lt;/div&gt;
+           &lt;script&gt;
+            const CustomButton = {
+            template: '&lt;button type="button"&gt;&lt;slot&gt;&lt;/slot&gt;&lt;/button&gt;'
+            };
+            new Vue({
+            el: '#app',
+            components: {
+            CustomButton
+            }
+            });
+           &lt;/script&gt;
+        </pre>
+</h3>
+<p>
+    In our component template, we’re giving the button type="button", but then when
+we call the component, we’re specifying type="submit". The attribute specified on
+the component, not inside the component, would override the other one, and the following would be output:
+</p>
+<h3>
+    <pre>
+        &lt;button type="submit"&gt;Click me!&lt;/button&gt;
+    </pre>
+</h3>
+<p>
+    Most attributes will overwrite the attribute inside the template, but class and style
+are slightly smarter, and their values will be merged. Let’s take the following example:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;div id="app"&gt;
+            &lt;custom-button
+            class="margin-top"
+            style="font-weight: bold; background-color: red"&gt;
+            Click me!
+            &lt;/custom-button&gt;
+        &lt;/div&gt;
+        &lt;script&gt;
+         const CustomButton = {
+         template: `
+         &lt;button
+         class="custom-button"
+         style="color: yellow; background-color: blue"&gt;
+         &lt;slot&gt;&lt;/slot&gt;
+         &lt;/button&gt;`
+         };
+         new Vue({
+         el: '#app',
+         components: {
+         CustomButton
+         }
+         });
+        &lt;/script&gt;
+    </pre>
+</h3>
+<p>
+    The classes will be merged together to give custom-button margin-top, and the style
+attributes will be merged together to become color: yellow; background-color:
+red; font-weight: bold;. Note that the background-color from the component
+attribute has overridden the background-color from the component’s template.
+</p>
+<h1 translate="no">Components and v-for</h1>
+<p>
+    When using v-for to loop through an array or object, and the array or object given to
+the directive changes, Vue doesn’t regenerate every element again; it intelligently
+works out which elements need to change and changes only those ones. For example,
+if you have an array that is being output to the page as list elements and you add
+another item to the end of the list, the existing elements will be left alone, and a new
+element will be created at the end. If an item in the middle of the array is changed,
+only the corresponding element is changed.
+</p>
+<p>
+    If, however, you remove or add an item in the middle of the list, Vue won’t calculate
+which is the corresponding element for the item removed; it will update every single
+element from that point to the end of the list, where it will add or remove a new element. With simple content, this probably isn’t an issue, but with more complicated
+content and with components, you’ll want to stop Vue from doing that.
+</p>
+<p>
+    Vue allows you to specify a key when using v-for so that you can tell Vue which element should be associated with each item of the array and the correct element is
+deleted. By default, the key is the index of the element within the loop. You can see
+how this behavior works by using the following code:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;template&gt;
+            &lt;demo-key v-for="(item, i) in items" @click.native="items.splice(i, 1)"&gt;
+            {{ item }}
+        &lt;/demo-key&gt;
+    &lt;/template&gt;
+    &lt;script&gt;
+     const randomColor = () =&gt; `hsl(${Math.floor(Math.random() * 360)}, 75%, 85%)`;
+     const DemoKey = {
+     template: `&lt;p :style="{ backgroundColor: color }"&gt;&lt;slot&gt;&lt;/slot&gt;&lt;/p&gt;`,
+     data: () =&gt; ({
+     color: randomColor()
+     })
+     };
+     export default {
+     data: () =&gt; ({
+     items: ['one', 'two', 'three', 'four', 'five']
+     }),
+     components: {
+     DemoKey
+     }
+     };
+    &lt;/script&gt;
+    </pre>
+</h3>
+<p>
+    The click handler is added using the .native modifier, because
+that’s how you can add event listeners for native DOM events to
+components. Without .native, the event handler wouldn’t be
+called.
+</p>
+<p>
+    That outputs five randomly colored paragraph elements containing the numbers one
+through five, as follows:
+</p>
+<p>
+    Clicking one of the paragraphs removes the corresponding item from the items
+array. If we click the second element—in the image, the element labeled two—you’d
+expect that that element would be completely removed, and the element containing
+three would become the second element. Not so! What you end up with is the following:
+</p>
+<p>
+    This is because of the way Vue’s diffing mechanism works: you removed the second
+item, so it updates the text of that element to reflect the change, and then the next
+element, and then the next element, and then the array has ended, so it removes the
+final element. That probably wasn’t what you desired in this case, though, so let’s add
+a key to the example so that Vue knows which element to delete:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;template&gt;
+            &lt;demo-key
+            v-for="(item, i) in items" :key="item"
+            @click.native="items.splice(i, 1)"&gt;
+            {{ item }}
+            &lt;/demo-key&gt;
+           &lt;/template&gt;
+    </pre>
+</h3>
+<p>
+    The key should be a unique number or string that corresponds to the item in the
+array. In this case, the array items themselves are just strings, so we can use them as
+the keys.
+</p>
+<i>
+    I’ve fairly frequently seen people specify the key to be the index of
+the array (for instance, :key="i" in the previous example). Except
+in some specific cases, you probably don’t want to do that!
+Although it will stop the warnings, you’ll run into exactly the same
+issue I just showed you, with a different element from what you’d
+expect being deleted.
+</i>
+<p>
+    Now, clicking the second element will remove two from the array, and the corresponding element, resulting in the following:
+</p>
+<p>
+    In general, specify a key wherever you can. It’s not optional when using v-for directly
+on a component, as you saw in the previous example. Vue will have logged warnings
+to the console in that example.
+</p>
+<h1 translate="no">
+    Summary
+</h1>
+<p>
+    Components are great for separating your code into logical chunks, each of which can
+perform a specific task. In this chapter you learned how to create and use components, both globally with Vue.component() and locally using the components property and objects.
+You also saw how to pass data into components by using props, how to validate those
+props, and how data flows down but not up unless you use .sync, or for inputs, custom update events.
+I showed you how to use slots to pass other HTML and components into components, easily enabling you to make layout components and fallback content.
+You looked at custom events, which you can use to send information from a component to its parent.
+You also learned to use mixins to move common logic out of components and share
+it between multiple components.
+You looked at vue-loader and how you can use it when using webpack to create
+single-file components—a file that contains a component and nicely separates the
+HTML, JavaScript, and styling logic.
+Finally, you also learned what happens if you specify an attribute on a component
+that isn’t used as a prop, and why you should use :key when using v-for on a component.
+</p>
+<a href="chap3.html">Styling with Vue</a>
+</body>
+</html>

@@ -1,0 +1,2373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Document</title>
+</head>
+<body>
+ <h1>Vue.js: Up and Running <br>Building Accessible and Performant Web Apps</h1>
+<p>
+    Frontend development is changing. Websites are becoming richer and more interactive, requiring us as frontend developers to add increasingly complicated functional‐
+ity and use more powerful tools. It’s easy enough to update a bit of text on a page by
+using jQuery, but as we need to do more—updating large, interactive sections of a
+page; handling complicated state; performing client-side routing; and simply writing
+and organizing a lot more code—using a JavaScript framework makes our jobs a lot
+easier.
+A framework is a JavaScript tool that makes it easier for developers to create rich,
+interactive websites. Frameworks contain functionality that enable us to make a fully
+functional web application: manipulating complicated data and displaying it on the
+page, handling routing client-side instead of having to rely on a server, and sometimes even allowing us to create a full website that needs to hit the server only once
+for the initial download. Vue.js is the latest popular JavaScript framework and is rapidly increasing in popularity. Evan You, then working at Google, wrote and released
+the first version of Vue.js in early 2014. At the time of writing, it has over 75,000 stars
+on GitHub, making it the eighth most starred repository on GitHub, and that number
+is growing rapidly.1
+ Vue has hundreds of collaborators and is downloaded from npm
+about 40,000 times every day. It contains features that are useful when developing
+websites and applications: a powerful templating syntax to write to the DOM and listen to events, reactivity so that you don’t need to update the template after your data
+changes, and functionality that makes it easier for you to manipulate your data.
+</p>
+<p>
+    Chapter 1, Vue.js: the Basics
+The first chapter introduces the basics of Vue.js, the main technology that this
+book is about. I explain how to install it and introduce it into a web page, and
+how you can use it to display data on a page. <br>
+Chapter 2, Components in Vue.js
+Vue.js allows—and encourages—you to split your code into components that you
+can then reuse around your codebase. This chapter explains exactly how you can
+do that to create a more maintainable and understandable codebase. <br>
+Chapter 3, Styling with Vue
+Every other section of the book deals with HTML and JavaScript, but this chapter
+presents the more visual side of creating websites. I explain how Vue works with
+CSS and styles in order to style your websites and applications, and the helper
+functionality it has built in to assist you with this. <br>
+Chapter 4, Render Functions and JSX
+In addition to the templating syntax that you’ll recognize if you’ve seen much
+Vue code or read the Getting Started guide, Vue supports custom render functions, which also allow you to use JSX, a syntax you’re familiar with if you’ve used
+React before. I explain how to use JSX in your Vue application in this chapter. <br>
+Chapter 5, Client-Side Routing with vue-router
+Vue by itself is just a view layer. To create an application with multiple pages that
+can be accessed without making a new request (or in buzzword format: a singlepage application), you need to add vue-router to your website, which you can use
+to handle the routing—saying which code should be executed and displayed
+when a given path is requested. This chapter explains how to do just that. <br>
+Chapter 6, State Management with Vuex
+In more complicated applications with many levels of components, passing data
+between components can become a bit of a pain. Vuex enables you to handle
+your application’s state in one centralized place, and in this chapter I explain how
+you can use it to easily handle complicated application state. <br>
+Chapter 7, Testing Vue Components
+By this point, you’ll have learned everything you need to know to get your website running, but if you want to maintain your site in the future, you’ll need to
+write tests for it. This chapter covers how to use vue-test-utils to write unit tests
+for your Vue components to ensure that they don’t break in the future.
+</p>
+<p>
+    Appendix A, Bootstrapping Vue
+vue-cli enables you to quickly bootstrap Vue applications from given templates.
+This short appendix shows you how it works and presents a few of the templates. <br>
+Appendix B, Vue from React
+If you’ve used React before, you’re probably familiar with a lot of the concepts of
+Vue. This appendix highlights some of the differences, and some of the similarities, between Vue and React.
+</p>
+<h1>Style Guide</h1>
+<p>
+    
+The examples throughout this book follow the guidelines outlined in the official Vue
+Style Guide. Once you understand Vue and are looking to work on a larger app or
+collaborate with other people, I definitely recommend reading the style guide and fol‐
+lowing the guidelines.
+You can find the style guide on the Vue.js website.
+</p>
+<h1>chapitre 1 :Vue.js: The Basics</h1>
+<p>
+    As explained in the preface, Vue.js is the library at the heart of an ecosystem that
+allows us to create powerful client-side applications. We don’t have to use the whole
+ecosystem just to build a website, though, so we’ll start by looking at Vue by itself.
+</p>
+<h1>Why Vue.js?</h1>
+<p>
+    Without a framework, we’d end up with a mess of unmaintainable code, the vast
+majority of which would be dealing with stuff that the framework abstracts away
+from us. Take the following two code examples, both of which download a list of
+items from an Ajax resource and display them on the page. The first one is powered
+by jQuery, while the second one is using Vue.
+</p>
+<p>
+    Using jQuery, we download the items, select the ul element, and then if there are
+items, we iterate through them, manually creating a list element, adding the is-blue
+class if wanted, and setting the text to be the item. Finally, we append it to the ul
+element:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;ul class="js-items"&gt; &lt;/ul&gt;
+&lt;script&gt;
+ $(function () {
+ $.get('https://example.com/items.json')
+ .then(function (data) {
+ var $itemsUl = $('.js-items');
+ if (!data.items.length) {
+ var $noItems = $('li');
+ $noItems.text('Sorry, there are no items.');
+ $itemsUl.append($noItems);
+ } else {
+ data.items.forEach(function (item) {
+    var $newItem = $('li');
+    $newItem.text(item);
+    if (item.includes('blue')) {
+    $newItem.addClass('is-blue');
+    }
+    $itemsUl.append($newItem);
+    });
+    }
+    });
+    });
+   &lt;/script&gt;
+    </pre>
+</h3>
+<p>
+    This is what the code does:
+
+</p>
+<h3>
+    <pre>
+1. It makes an Ajax request using $.get().
+2. It selects the element matching .js-items and stores it in the $itemsUl object.
+3. If there are no items in the list downloaded, it creates an li element, sets the text
+of the li element to indicate that there were no items, and adds it to the document.
+If there are items in the list, it iterates through them in a loop.
+4. For every item in the list, it creates an li element and sets the text to be the item.
+Then, if the item contains the string blue, it sets the class of the element to isblue. Finally, it adds the element to the document.
+    </pre>
+</h3>
+<p>
+    Every step had to be done manually—every element created and appended to the
+document individually. We have to read all the way through the code to work out
+exactly what is going on, and it isn’t obvious at all at first glance.
+</p>
+<p>
+    With Vue, the code providing the same functionality is much simpler to read and
+understand—even if you’re not yet familiar with Vue:
+</p>
+<h3>
+    <pre>
+        &lt;ul class="js-items"&gt;
+            &lt;li v-if="!items.length"&gt;Sorry, there are no items.&lt;/li&gt;
+            &lt;li v-for="item in items" :class="{ 'is-blue': item.includes('blue') }"&gt;
+            {{ item }}&lt;/li&gt;
+           &lt;/ul&gt;
+           &lt;script&gt;
+            new Vue({
+            el: '.js-items',
+            data: {
+            items: []
+            },
+            created() {
+            fetch('https://example.com/items.json')
+            .then((res) => res.json())
+            .then((data) => {
+                this.items = data.items;
+ });
+ }
+ });
+&lt;/script&gt;
+    </pre>
+</h3>
+<h3>
+    <pre>
+This code does the following:
+1. It makes an Ajax request using fetch().
+2. It parses the response from JSON into a JavaScript object.
+3. It stores the downloaded items in the items data property.
+    </pre>
+</h3>
+<p>
+    That’s all the actual logic in the code. Now that the items have been downloaded and
+stored, we can use Vue’s templating functionality to write the elements to the Document Object Model (DOM), which is how elements are represented on an HTML
+page. We tell Vue that we want one li element for every item and that the value
+should be item. Vue handles the creation of the elements and the setting of the class
+for us.
+</p>
+<p>
+    Don’t worry about fully understanding the code example if you don’t yet. I’ll slow
+down and introduce the various concepts one at a time throughout the book.
+</p>
+<p>
+    Not only is the second example significantly shorter, but it’s also a lot easier to read, as
+the actual logic of the app is completely separated from the view logic. Instead of having to wade through some jQuery to work out what is being added when, we can look
+at the template: if there are no items, a warning is displayed; otherwise, the items are
+displayed as list elements. The difference becomes even more noticeable with larger
+examples. Imagine we wanted to add a reload button to the page that would send a
+request to the server, get the new items, and update the page when the user clicks a
+button. With the Vue example, that’s only a couple of additional lines of code, but
+with the jQuery example, things start to get complicated.
+</p>
+<p>
+    In addition to the core Vue framework, several libraries work great with Vue and are
+maintained by the same people who maintain Vue itself. For routing—displaying different content depending on the URL of the application—there’s vue-router. For
+managing state—sharing data between components in one global store—there’s vuex,
+and for unit testing Vue components, there’s vue-test-utils. I cover all three of those
+libraries and give them a proper introduction later in the book: vue-router in Chapter 5, vuex in Chapter 6, and vue-test-utils in Chapter 7
+</p>
+<h1>
+    Installation and Setup
+</h1>
+<p>
+    You don’t need any special tools to install Vue. The following will do just fine:
+</p>
+<h3>
+    <pre>
+        &lt;div id="app"&gt;&lt;/div&gt;
+        &lt;script src="https://unpkg.com/vue"&gt;&lt;/script&gt;
+&lt;script&gt;
+ new Vue({
+ el: '#app',
+ created() {
+ // This code will run on startup
+ }
+ });
+&lt;/script&gt;
+    </pre>
+</h3>
+<p>
+    This example contains three important things. First, there is a div with the ID app,
+which is where we’re going to initiate Vue onto—for various reasons, we can’t initiate
+it onto the body element itself. Then, we’re downloading the CDN1
+ version of Vue
+onto our page. You can also use a local copy of Vue, but for the sake of simplicity,
+we’ll go with this for now. Finally, we’re running some JavaScript of our own, which
+creates a new instance of Vue with the el property set pointing at the div previously
+mentioned
+</p>
+<p>
+    That works great on simple pages, but with anything more complicated, you probably
+want to use a bundler such as webpack. Among other things, this will allow you to
+write your JavaScript using ECMAScript 2015 (and above), write one component perfile and import components into other components, and write CSS scoped to a spe‐
+cific component (covered in more detail in Chapter 2).
+</p>
+ <h1>
+    vue-loader and webpack
+ </h1>
+ <p>
+    vue-loader is a loader for webpack that allows you to write all the HTML, JavaScript,
+    and CSS for a component in a single file. We’ll be exploring it properly in Chapter 2,
+    but for now all you need to know is how to install it. If you have an existing webpack
+    setup or favorite webpack template, you can install it by installing vue-loader through
+    npm, and then adding the following to your webpack loader configuration:
+ </p>
+ <h3>
+     <pre>
+        module: {
+            loaders: [
+            {
+            test: /\.vue$/,
+            loader: 'vue',
+            },
+            // ... your other loaders ...
+            ]
+            }
+     </pre>
+ </h3>
+ <b>1 A content delivery network (CDN) is hosted on someone else’s servers all around the world for quick delivery.
+    A CDN is useful for development and quick prototyping, but you should research whether it’s right for you
+    before using unpkg in production.</b>
+    <p>
+        If you don’t already have a webpack setup or you’re struggling with adding vueloader, don’t worry! I’ve never managed to set up webpack from scratch either. There
+is a template you can use to set up a vue project using webpack that already has vueloader installed. You can use it through vue-cli:
+
+    </p>
+    <h3>
+        <pre>
+            $ npm install --global vue-cli
+$ vue init webpack
+        </pre>
+    </h3>
+    <p>
+        You can then explore the generated files to see what’s going on. Most of the important
+stuff is happening in the src directory in the .vue files.
+    </p>
+    <h1 translate="no">
+        Templates, Data, and Directives
+    </h1>
+    <p>
+        At the heart of Vue is a way to display data on the page. This is done using templates.
+Normal HTML is embellished using special attributes—known as directives—that we
+use to tell Vue what we want to happen and what it should do with the data we’ve
+provided it.
+
+    </p>
+    <p>
+        Let’s jump straight into an example. The following example will display “Good morning!” in the morning, “Good afternoon!” until 6 p.m., and “Good evening!” after that:
+    </p>
+    <h3>
+        <pre>
+            &lt;div id="app"&gt;
+                &lt;p v-if="isMorning"&gt;Good morning!&lt;/p&gt;
+                &lt;p v-if="isAfternoon"&gt;Good afternoon!&lt;/p&gt;
+                &lt;p v-if="isEvening"&gt;Good evening!&lt;/p&gt;
+               &lt;/div&gt;
+               &lt;script&gt;
+                var hours = new Date().getHours();
+                new Vue({
+                el: '#app',
+                data: {
+                isMorning: hours < 12,
+                isAfternoon: hours >= 12 && hours < 18,
+ isEvening: hours >= 18
+ }
+ });
+&lt;/script&gt;
+        </pre>
+    </h3>
+    <p>
+        Let’s talk about the last bit, first: the data object. This is how we tell Vue what data we
+want to display in the template. We’ve set three properties of the object—isMorning,
+isAfternoon, and isEvening—one of which is true, and two of which are false,
+depending what time of day it is.
+    </p>
+    <p>
+        Then, in the template, we’re using the v-if directive to show only one of the three
+greetings, depending on what the variable is set to. The element that v-if is set on is
+displayed only if the value passed to it is truthy; otherwise, the element is not written
+to the page. If the time is 2:30 p.m., the following is output to the page:
+    </p>
+    <h3>
+        <pre>
+            &lt;div id="app"&gt;
+                &lt;p&gt;Good afternoon!&lt;/p&gt;
+               &lt;/div&gt;
+        </pre>
+    </h3>
+    <p>
+        Quite a bit of duplication occurs in the previous example, though: it would be better
+if we could set the time as a data variable and then do the comparison logic in the
+template. Luckily, we can! Vue evaluates simple expressions inside v-if:
+
+    </p>
+    <h3>
+        <pre>
+            &lt;div id="app"&gt;
+                &lt;p v-if="hours &lt; 12"&gt;Good morning!&lt;/p&gt;
+                &lt;p v-if="hours &gt;= 12 && hours &lt; 18"&gt;Good afternoon!&lt;/p&gt;
+                &lt;p v-if="hours &gt;= 18"&gt;Good evening!&lt;/p&gt;
+               &lt;/div&gt;
+               &lt;script&gt;
+                new Vue({
+                el: '#app',
+                data: {
+                hours: new Date().getHours()
+                }
+                });
+               &lt;/script&gt;
+        </pre>
+    </h3>
+    <p>
+        Writing code in this manner, with the business logic in the JavaScript and the view
+logic in the template, means that we can tell at a glance exactly what will be displayed
+when on the page. This is a much better approach than having the code responsible
+for deciding whether to show or hide the element in some JavaScript far away from
+the element in question.
+    </p>
+    <p>
+        Later, we’ll be looking at computed properties, which we can use to make the preceding code a lot cleaner—it’s a bit repetitive.
+    </p>
+    <p>
+        In addition to using directives, we can also pass data into templates by using interpolation, as follows:
+    </p>
+    <h3>
+        <pre>
+            &lt;div id="app"&gt;
+                &lt;p&gt;Hello, {{ greetee }}!&lt;/p&gt;
+               &lt;/div&gt;
+               &lt;script&gt;
+                new Vue({
+                el: '#app',
+                data: {
+                greetee: 'world'
+                }
+                });
+               &lt;/script&gt;
+        </pre>
+    </h3>
+    <p>
+        This outputs the following to the page:
+
+    </p>
+    <h3>
+        <pre>
+            &lt;div id="app"&gt;
+                &lt;p&gt;Hello, world!&lt;/p&gt;
+               &lt;/div&gt;
+        </pre>
+    </h3>
+    <p>
+        We can also combine the two, using both directives and interpolation to show some
+text only if it is defined or useful. See if you can figure out what the following code
+displays on the page and when:
+
+    </p>
+    <h3>
+        <pre>
+            &lt;div id="app"&gt;
+                &lt;p v-if="path === '/'"&gt;You are on the home page&lt;/p&gt;
+                &lt;p v-else&gt;You're on {{ path }}&lt;/p&gt;
+               &lt;/div&gt;
+               &lt;script&gt;
+                new Vue({
+                el: '#app',
+                data: {
+                path: location.pathname
+                }
+                });
+               &lt;/script&gt;
+        </pre>
+    </h3>
+    <p>
+        location.pathname is the path in the URL of the page, so it can be “/” when on the
+root of the site, or “/post/1635” when somewhere else on the site. The preceding code
+tells you whether you’re on the home page of the site: in a v-if directive, it tests
+whether the path is equal to “/” (and the user is therefore on the root page of the site),
+and then we’re introduced to a new directive, v-else. It’s pretty simple: when used
+after an element with v-if, it works like the else statement of an if-else statement.
+The second element is displayed on the page only when the first element is not.
+
+    </p>
+    <p>
+        In addition to being able to pass through strings and numbers, as you’ve seen, it’s also
+possible to pass other types of data into templates. Because we can execute simple expressions in the templates, we can pass an array or object into the template and
+look up a single property or item:
+    </p>
+    <h3>
+        <pre translate="no">
+            &lt;div id="app"&gt;
+                &lt;p&gt;The second dog is {{ dogs[1] }}&lt;/p&gt;
+                &lt;p&gt;All the dogs are {{ dogs }}&lt;/p&gt;
+               &lt;/div&gt;
+               &lt;script&gt;
+                new Vue({
+                el: '#app',
+                data: {
+                dogs: ['Rex', 'Rover', 'Henrietta', 'Alan']
+                }
+                });
+               &lt;/script&gt;
+        </pre>
+    </h3>
+    <p>
+        The following is output to the page:
+    </p>
+    <h3>
+        <pre>
+            The second dog is Rover
+All the dogs are [ "Rex", "Rover", "henrietta", "Alan" ]
+
+        </pre>
+    </h3>
+    <p>
+        As you can see, if you output a whole array or object to the page, Vue outputs the
+JSON-encoded value to the page. This can be useful when debugging instead of logging to console, as the value displayed on the page will update whenever the value
+changes.
+    </p>
+    <h1 translate="no">v-if Versus v-show</h1>
+    <p>
+        You met v-if in the previous section to show and hide an element, but how does it
+do that, and what’s the difference between it and the similar sounding v-show?
+    </p>
+    <p>
+        If the value of a v-if directive evaluates to falsy,2
+ the element isn’t output to the
+DOM.
+The following Vue template
+    </p>
+    <h3>
+        <pre>
+            &lt;div v-if="true"&gt;one&lt;/div&gt;
+&lt;div v-if="false"&gt;two&lt;/div&gt;
+
+        </pre>
+    </h3>
+    <p>
+        results in the following output:
+    </p>
+    <h3>
+        <pre>
+            &lt;div&gt;one&lt;/div&gt;
+        </pre>
+    </h3>
+    <p>Compare that to v-show, which uses CSS to show and hide the element.</p>
+    <b>2 A falsy value is a value that is false, undefined, null, 0, "", or NaN.</b>
+    <p>The following Vue template</p>
+    <h3>
+        <pre>
+            &lt;div v-show="true"&gt;one&lt;/div&gt;
+&lt;div v-show="false"&gt;two&lt;/div&gt;
+        </pre>
+    </h3>
+    <p>
+        results in the following output:
+    </p>
+    <h3>
+        <pre>
+            &lt;div>one&lt;/div&gt;
+&lt;div style="display: none"&gt;one&lt;/div&gt;
+        </pre>
+    </h3>
+    <p>Your users will (probably) see the same thing, but other implications and differences
+        exist between the two.</p>
+        <p>
+            First, because the inside element hidden using v-if isn’t going to be displayed, Vue
+doesn’t try to generate the HTML; this isn’t the case with the v-show example. This
+means that v-if is better for hiding stuff that hasn’t loaded yet.
+In this example, an error will be thrown:
+        </p>
+        <h3>
+            <pre>
+                &lt;div id="app"&gt;
+                    &lt;div v-show="user"&gt;
+                    &lt;p&gt;User name: {{ user.name }}&lt;/p&gt;
+                    &lt;/div&gt;
+                   &lt;/div&gt;
+                   &lt;script&gt;
+                    new Vue({
+                    el: '#app',
+                    data: {
+                    user: undefined
+                    }
+                    });
+                   &lt;/script&gt;
+            </pre>
+        </h3>
+        <p>
+            The reason the error will be thrown is that Vue has attempted to execute user.name—
+a property of an object that doesn’t exist. The same example using v-if works just
+fine, because Vue doesn’t attempt to generate the inside of the element until the v-if
+statement is truthy.
+        </p>
+        <p>
+            Also, two conditionals are related to v-if: v-else-if and v-else. They behave pretty
+much as you’d expect:
+        </p>
+        <h3>
+            <pre>
+                &lt;div v-if="state === 'loading'"&gt;Loading…&lt;/div&gt;
+&lt;div v-else-if="state === 'error'"&gt;An error occurred&lt;/div&gt;
+&lt;div v-else&gt;…our content!&lt;/div&gt;
+
+            </pre>
+        </h3>
+        <p>
+            The first div displays if state is loading, the second if state is error, and the third
+if state is anything else. Only one of the elements will display at a time.
+        </p>
+        <p>
+            OK, so having seen that, why would anyone want to use v-show?
+        </p>
+        <p>
+            Using v-if has a performance cost. Every time an element is added or removed, work
+has to be done to generate the DOM tree underneath it, which can sometimes be a lot
+
+        </p>
+        <p>
+            of stuff. v-show has no such cost beyond the initial setup cost. If you’re expecting
+something to change frequently, v-show might be the best choice.
+Also, if the element contains any images, then hiding the parent with only CSS allows
+the browser to download the image ahead of it being displayed, meaning that it can
+be displayed as soon as v-show becomes truthy. Otherwise, it wouldn’t start downloading until it was supposed to be displayed.
+        </p>
+        <h1 translate="no">
+            Looping in Templates
+        </h1>
+        <p>
+            Another directive I find myself using a lot is the v-for directive, which loops through
+the elements of an array or object, outputting the element multiple times. Take the
+following example:
+        </p>
+        <h3>
+            <pre>
+                &lt;div id="app"&gt;
+                    &lt;ul&gt;
+                    &lt;li v-for="dog in dogs"&gt;{{ dog }}&lt;/li&gt;
+                    &lt;/ul&gt;
+                   &lt;/div&gt;
+                   &lt;script&gt;
+                    new Vue({
+                    el: '#app',
+                    data: {
+                    dogs: ['Rex', 'Rover', 'Henrietta', 'Alan']
+                    }
+                    });
+                   &lt;/script&gt;
+                </pre>
+        </h3>
+        <p>
+            That outputs every item of the array to the page in list elements, like this:
+        </p>
+        <h3>
+            <pre>
+                &lt;div id="app"&gt;
+                    &lt;ul&gt;
+                    &lt;li&gt;Rex&lt;/li&gt;
+                    &lt;li&gt;Rover&lt;/li&gt;
+                    &lt;li&gt;Henrietta&lt;/li&gt;
+                    &lt;li&gt;Alan&lt;/li&gt;
+                    &lt;/ul&gt;
+                   &lt;/div&gt;
+            </pre>
+        </h3>
+        <p>
+            The v-for directive also works with objects. Consider the following example, which
+takes an object containing the average rent of a few cities and outputs them to the
+page:
+        </p>
+     <h3>
+         <pre>
+            &lt;div id="app"&gt;
+                &lt;ul&gt;
+                &lt;li v-for="(rent, city) in averageRent"&gt;
+                The average rent in {{ city }} is ${{ rent }}&lt;/li&gt;
+                &lt;/ul&gt;
+               &lt;/div&gt;
+               &lt;script&gt;
+                new Vue({el: '#app',
+                data: {
+                averageRent: {
+                london: 1650,
+                paris: 1730,
+                NYC: 3680
+                }
+                }
+                });
+               &lt;/script&gt;
+         </pre>
+     </h3>
+     <p>
+        The syntax here is slightly different, because we want to get the key as well—having
+        just the rent on the page but not the names of cities wouldn’t be too useful. However,
+        if we don’t want the keys, we can use the same syntax as before, v-for="rent in
+        averageRent". This also applies to arrays: if we want the index of an array, we can use
+        the bracket and comma syntax that you just saw with the array: v-for="(dog, i) in
+        dogs"
+     </p>
+     <p>
+        Note the order of the arguments: it’s (value, key), not the other way around.
+     </p>
+     <p>
+        Finally, if you just want a simple counter, you can pass a number in as the argument.
+        The following outputs the numbers 1 to 10:
+     </p>
+     <h3>
+         <pre>
+            &lt;div id="app"&gt;
+                &lt;ul&gt;
+                &lt;li v-for="n in 10"&gt;{{ n }}&lt;/li&gt;
+                &lt;/ul&gt;
+               &lt;/div&gt;
+               &lt;script&gt;
+                new Vue({
+                el: '#app'
+                });
+               &lt;/script&gt;
+         </pre>
+     </h3>
+     <p>
+        You might have expected the numbers 0 to 9 to be output, but that isn’t the case. To
+        start the list at 0, it’s usually easier to refer to n - 1 instead of just n.
+     </p>
+     <h1 translate="no">Binding Arguments</h1>
+     <p>
+        Some directives, such as v-bind, take arguments. The v-bind directive is used to bind
+        a value to an HTML attribute. For instance, the following example binds the value
+        submit to the button type:
+     </p>
+     <h3>
+         <pre>
+            &lt;div id="app"&gt;
+                &lt;button v-bind:type="buttonType"&gt;Test button&lt;/button&gt;
+               &lt;/div&gt;
+               &lt;script&gt;
+                new Vue({
+                el: '#app',
+                data: {ttonType: 'submit'
+            }
+            });
+           &lt;/script&gt;
+         </pre>
+     </h3>
+     <p>
+        The following is output to the document:
+     </p>
+     <h3>
+         <pre>
+            &lt;button type="submit"&gt;Test button&lt;/button&gt;
+
+         </pre>
+     </h3>
+     <p>
+        v-bind is the name of the directive, and type is the argument: in this case, the name
+        of the attribute we want to bind the given variable to. buttonType is the value.
+     </p>
+     <p>
+        This also works with properties, such as disabled and checked: if the expression
+        passed is truthy, the output element will have the property, and if it is falsy, the element will not:
+     </p>
+     <h3>
+         <pre>
+            &lt;div id="app"&gt;
+                &lt;button v-bind:disabled="buttonDisabled"&gt;Test button&lt;/button&gt;
+               &lt;/div&gt;
+               &lt;script&gt;
+                new Vue({
+                el: '#app',
+                data: {
+                buttonDisabled: true
+                }
+                });
+               &lt;/script&gt;
+         </pre>
+     </h3>
+     <p>
+        When using v-bind with a lot of attributes, it can be pretty repetitive to write it out
+        multiple times. There’s a shorter way to write it: you can omit the v-bind part of the
+        directive and use a colon. For example, this is how you would rewrite the preceding
+        code example using the shorter syntax:        
+     </p>
+     <h3>
+         <pre>
+           &lt;div id="app"&gt;
+               &lt;button :disabled="buttonDisabled"&gt;Test button&lt;/button&gt;
+              &lt;/div&gt;
+              &lt;script&gt;
+                new Vue({
+                el: '#app',
+                data: {
+                buttonDisabled: true
+                }
+                });
+              &lt;/script&gt;
+         </pre>
+     </h3>
+     <p>
+        While your choice of syntax is obviously a personal preference, I much prefer the
+        shorter syntax and rarely write v-bind in my code.
+     </p>
+     <b>Whether you choose to use v-bind or the shorter syntax, try to
+        keep it consistent. Using v-bind in some places and the shorter
+        syntax in others can get a bit confusing.</b>
+        <h1>Reactivity</h1>
+        <p>
+            The last few sections of this chapter have shown how we can use Vue to output
+HTML to the DOM from values in JavaScript—but so what? What makes Vue different from any templating language?
+        </p>
+        <p>
+            In addition to creating the HTML in the first place, Vue watches the data object for
+changes and updates the DOM when the data changes. To demonstrate this, let’s
+make a simple timer app that tells you how long the page has been open. We’ll need
+only one variable, which we’ll call seconds, and we’ll use setInterval to increment
+that variable once a second:
+        </p>
+        <h3>
+            <pre>
+                &lt;div id="app"&gt;
+                    &lt;p&gt;{{ seconds }} seconds have elapsed since you opened the page.&lt;/p&gt;
+                   &lt;/div&gt;
+                   &lt;script&gt;
+                    new Vue({
+                    el: '#app',
+                    data: {
+                    seconds: 0
+                    },
+                    created() {
+                    setInterval(() =&gt; {
+                    this.seconds++;
+                    }, 1000);
+                    }
+                    });
+                   &lt;/script&gt;
+            </pre>
+        </h3>
+        <p>
+            The <span translate="no"> create </span> function runs when the app is initiated. We’ll cover the Vue life-cycle
+hooks in more detail later, so don’t worry about the function too much for now.
+this.seconds in that function refers directly to the value in the data object, and
+manipulating it updates the template.
+
+        </p>
+        <p>
+            Here’s that example after the page has been open for a bit
+        </p>
+        <h3>
+            <pre>
+                14 seconds have elapsed since you opened the page.
+            </pre>
+        </h3>
+        <p>
+            In addition to working with interpolation to output the value to the page, Vue’s reac‐
+tivity functionality also works when using a property of the data object as an attribute
+to a directive. For example, if in the v-bind example we ran this.buttonDisabled
+= !this.buttonDisabled; once a second, we would see that the button disabled
+        </p>
+        <p>
+            property would be toggled once a second: the button would be enabled for a second,
+and then disabled for another
+        </p>
+        <p>
+            Reactivity is an extremely important feature and part of what makes Vue so powerful.
+You’ll be seeing it a lot both in this book and in any Vue projects you work on.
+        </p>
+        <h1>
+            How It Works
+        </h1>
+        <p>
+            This section is a bit more advanced; feel free to skip it and come back to it later if you
+don’t understand everything.
+        </p>
+        <p>
+            Vue’s reactivity works by modifying every object added to the data object so that Vue
+is notified when it changes. Every property in an object is replaced with a getter and
+setter so that you can use the object as a normal object, but when you change the
+property, Vue knows that it has changed.
+        </p>
+        <p>
+            Take the following object:
+        </p>
+        <h3>
+            <pre>
+                const data = {
+                    userId: 10
+                   };
+            </pre>
+        </h3>
+        <p>
+            When userId is changed, how do you know it has been changed? You could store a
+copy of the object and compare them to each other, but that’s not the most efficient
+way of doing it. That’s called dirty checking, and it’s the way Angular 1 did it.
+        </p>
+        <p>
+            Instead, you can override the property by using Object.defineProperty():
+        </p>
+        <h3>
+            <pre>
+                const storedData = {};
+storedData.userId = data.userId;
+Object.defineProperty(data, 'userId', {
+ get() {
+ return storedData.userId;
+ },
+ set(value) {
+ console.log('User ID changed!');
+ storedData.userId = value;
+ },
+ configurable: true,
+ enumerable: true
+};
+            </pre>
+        </h3>
+        <p>
+            This isn’t exactly how Vue does it, but it’s a good way to think about it. <br>
+Vue also wraps some array methods such as .splice() on observed arrays with a
+proxy method to observe when the method is called. This is so that when you
+call .splice(), Vue knows that you’ve updated the array, and any necessary view
+updates can be triggered.
+        </p>
+        <h1>Caveats</h1>
+        <p>
+            There are some limitations to how this works. Understanding how Vue’s reactivity
+works can help you know the caveats, or you could just memorize the list. Only a few
+caveats exist, so it’s not too tricky to memorize them.
+        </p>
+        <h3>Adding new properties to an object</h3>
+        <p>
+            Because the getter/setter functions are added when the instance is initialized, only
+existing properties are reactive; when you add a new property, it won’t be reactive if
+you do it directly:
+        </p>
+        <h3>
+            <pre>
+                const vm = new Vue({
+                    data: {
+                    formData: {
+                    username: 'someuser'
+                    }
+                    }
+                   });
+                   vm.formData.name = 'Some User';
+                   
+            </pre>
+        </h3>
+        <p>
+            While the formData.username property will be reactive and respond to changes, the
+formData.name property will not. There are a few ways around this.
+        </p>
+        <p>
+            The easiest way is to define the property on the object on initialization, but with a
+value of undefined. The formData object in the previous example would become this:
+        </p>
+        <h3>
+            <pre>
+                formData: {
+                    username: 'someuser',
+                    name: undefined
+                   }
+            </pre>
+        </h3>
+        <p>
+            Alternatively—and this is most useful if you’re updating multiple properties at the
+same time—you can use Object.assign() to create a new object and override the
+only object:
+        </p>
+        <h3>
+            <pre>
+                vm.formData = Object.assign({}, vm.formData, {
+                    name: 'Some User'
+                   });
+            </pre>
+        </h3>
+        <p>
+            Finally, Vue provides a function called Vue.set() that you can use to set reactive
+properties
+        </p>
+        <h3>
+            <pre>
+                Vue.set(vm.formData, 'name', 'Some User');
+            </pre>
+        </h3>
+        <p>
+            When inside a component, this function is also available as this.$set.
+
+        </p>
+        <h3>
+            Setting items on an array
+        </h3>
+        <p>
+            You can’t directly set items on an array by using the index. The following will not
+work:
+        </p>
+        <h3>
+            <pre>
+                const vm = new Vue({
+                    data: {
+                    dogs: ['Rex', 'Rover', 'Henrietta', 'Alan']
+                    }
+                   });
+                   vm.dogs[2] = 'Bob'
+            </pre>
+        </h3>
+        <p>
+            There are two ways you can do this instead. You can use .splice() to remove the old
+item and add a new one:
+        </p>
+        <h3>
+            <pre>
+                vm.dogs.splice(2, 1, 'Bob);
+
+            </pre>
+        </h3>
+        <p>
+            Or you can use Vue.set() again:
+
+        </p>
+        <h3>
+            <pre>
+                Vue.set(vm.dogs, 2, 'Bob');
+            </pre>
+        </h3>
+        <p>
+            Either way works just as well
+        </p>
+        <h3>Setting the length of an array</h3>
+        <p>
+            In JavaScript, you can set the length of an array to either pad it to that length with
+empty items, or to cut off the end of the array (depending on whether the set length is
+more or less than the old length). You can’t do that with an array in the data object,
+because Vue won’t be able to detect any changes to the array
+        </p>
+        <p>
+            You can use splice instead:
+        </p>
+        <h3><pre translate="no">vm.dogs.splice(newLength);</pre></h3>
+        <p>This works only to shorten the array, not to make it longer.
+        </p>
+        <h1 translate="no">Two-Way Data Binding</h1>
+        <p>
+            So far you’ve seen how we can use our data to write to the template and how Vue’s
+reactivity functionality means that when the data is updated, so is the template. That’s
+only one-way data binding, though. If you tried the following, the inputText would
+stay the same, and the text below the input element would stay the same:
+        </p>
+        <h3>
+            <pre>
+                &lt;div id="app"&gt;
+                    &lt;input type="text" v-bind:value="inputText"&gt;
+                    &lt;p&gt;inputText: {{ inputText }}&lt;/p&gt;
+                   &lt;/div&gt;
+                   &lt;script&gt;
+                    new Vue({
+                    el: '#app',
+                    data: {inputText: 'initial value'
+                }
+                });
+               &lt;/script&gt;
+            </pre>
+        </h3>
+        <p>
+            To get this example to work as expected, you can’t use v-bind:value—using v-bind
+will update the value of the input only when the inputText changes, and not vice
+versa. Instead, you can use the v-model directive, which works on input elements to
+bind the value of the input to the corresponding property of the data object so that in
+addition to the input receiving the initial value of the data, when the input is updated,
+the data is updated too. Replacing the HTML part of the previous example with the
+following will now update the inputText: initial value text when you change the
+value of the input field:
+        </p>
+        <h3>
+            <pre>
+                &lt;div id="app"&gt;
+                    &lt;input type="text" v-model="inputText"&gt;
+                    &lt;p&gt;inputText: {{ inputText }}&lt;/p&gt;
+                   &lt;/div&gt;
+            </pre>
+        </h3>
+        <p>
+            It’s important to note that when you use v-model, if you set the value, checked, or
+selected attributes, they will be ignored. If you want to set the initial value of the
+input, set it in the data object instead. See the following example:
+        </p>
+        <h3>
+            <pre>
+                &lt;div id="app"&gt;
+                    &lt;input type="text" v-bind:value="inputText" value="initial value"&gt;
+                    &lt;p&gt;inputText: {{ inputText }}&lt;/p&gt;
+                   &lt;/div&gt;
+                   &lt;script&gt;
+                    new Vue({
+                    el: '#app',
+                    data: {
+                    inputText: ''
+                    }
+                    });
+                   &lt;/script&gt;
+            </pre>
+        </h3>
+        <p>
+            The inputText will still be bound to the inputText variable, and any text you put in
+the input box will appear in the paragraph element below it. However, the input will
+have no initial value, as it was set using the value attribute instead of in the data
+object, as shown in the first example.
+        </p>
+        <p>
+            Input elements, multiline text inputs (textareas), select elements, and checkboxes all
+work basically as expected: the value of the input and the value in the data object are
+the same (with checkboxes, the value in the data object will be a Boolean value). With
+radio inputs, it’s slightly different, as there is more than one element with the same vmodel. The name attribute will be ignored, and the value stored in the data will be
+equal to the value attribute of the currently selected radio input:
+
+        </p>
+        <h3>
+            <pre>
+                &lt;div id="app"&gt;
+                    &lt;label&gt;&lt;input type="radio" v-model="value" value="one"&gt; One&lt;/label&gt;
+                    &lt;label&gt;&lt;input type="radio" v-model="value" value="two"&gt; Two&lt;/label&gt;
+                    &lt;label&gt;&lt;input type="radio" v-model="value" value="three"&gt; Three&lt;/label&gt;
+                    <p>The value is {{ value }}</p>
+                &lt;/div&gt;
+                &lt;script&gt;
+                 new Vue({
+                 el: '#app',
+                 data: {
+                 value: 'one'
+                 }
+                 });
+                &lt;/script&gt;
+            </pre>
+        </h3>
+        <p>
+            When the first checkbox is selected, the value of value is one; when the second is
+selected, it is two, and so on. Although you can still use the name attribute, Vue will
+ignore it, and the radio buttons will act normally (with only one being checked at a
+time) without it.
+        </p>
+        <h1>
+            Setting HTML Dynamically
+        </h1>
+        <p>
+            Sometimes you might want to set the HTML of an element from an expression. Let’s
+say you’re calling an API that is returning some HTML which you need to display on
+the page. In an ideal world, the API would return a JSON object that you could pass
+to Vue and handle the template yourself, but—it happens. Vue has automatic HTML
+escaping built in, so if you try to write {{ yourHtml }}, the HTML characters will be
+escaped—it’ll look like &lt;strong&gt;this</strong> in the source—and it will
+appear as the HTML text sent down from the API on the page. Not ideal!
+If you want to take HTML and display it on the page, you can use the v-html directive as follows:
+        </p>
+        <h3>
+            <pre>
+                &lt;div v-html="yourHtml"&gt;&lt;/div&gt;
+            </pre>
+        </h3>
+        <p>
+            Then, whatever HTML is contained in yourHtml will be written directly to the page
+without being escaped first. <br>
+Be careful with this! By writing HTML to the page from a variable, you are potentially
+opening yourself up to XSS vulnerabilities.3
+ Never put user input in v-html or allow
+users to modify anything that goes through v-html without carefully validating and
+escaping what they’ve written first. You could accidentally allow your users to execute
+malicious script tags on your site. Use v-html only with data you trust.
+        </p>
+        <h1>Methods</h1>
+        <p>
+            This section explains how to use methods in Vue to make functions available in your
+templates in order to perform manipulations on your data.
+        </p>
+        <p>
+            Functions are pretty neat. They allow us to take a piece of logic and store it in a reusable way so that we can use it multiple times without repeating the code. It’s possible to
+use them in your Vue templates too, as methods. As shown in the following example,
+storing a function as a property of the methods object makes it available in your templates:
+        </p>
+        <h3>
+            <pre>
+                &lt;div id="app"&gt;
+                    &lt;p&gt;Current status: {{ statusFromId(status) }}&lt;/p&gt;
+                   &lt;/div&gt;
+                   &lt;script&gt;
+                    new Vue({
+                    el: '#app',
+                    data: {
+                    status: 2
+                    },
+                    methods: {
+                    statusFromId(id) {
+                    const status = ({
+                    0: 'Asleep',
+                    1: 'Eating',
+                    2: 'Learning Vue'
+                    })[id];
+                    return status || 'Unknown status: ' + id;
+                    }
+                    }
+                    });
+                   &lt;/script&gt;
+            </pre>
+        </h3>
+        <p>
+            This turns a number representing the status—possibly supplied in another step by an
+API—into a human-readable string indicating the actual status. You can add methods
+by specifying them as properties of the methods object.
+        </p>
+        <p>
+            In addition to being able to use methods in interpolations, you can use them in
+bound attributes—and really, anywhere that you can use JavaScript expressions.
+Here’s a short example:
+        </p>
+        <h3>
+            <pre>
+                &lt;div id="app"&gt;
+                    &lt;ul&gt;
+                    &lt;li v-for="number in filterPositive(numbers)"&gt;{{ number }}&lt;/li&gt;
+                    &lt;/ul&gt;
+                   &lt;/div&gt;
+                   &lt;script&gt;
+                    new Vue({
+                    el: '#app',
+                    data: { numbers: [-5, 0, 2, -1, 1, 0.5]
+                    },
+                    methods: {
+                    filterPositive(numbers) {
+                    return numbers.filter((number) => number >= 0);
+                    }
+                    }
+                    });
+                   &lt;/script&gt;
+            </pre>
+        </h3>
+        <p>
+            The method takes an array and returns a new array with all the negative numbers
+removed, so in this example, we get a list of positive numbers output to the page.
+        </p>
+        <p>
+            We looked at reactivity previously, and you’ll be glad to know that it applies here too.
+If numbers is changed—for example, if a number is added or removed—the method
+will be called again with the new numbers, and the information outputted to the page
+will be updated.
+        </p>
+        <h1 translate="no">this</h1>
+        <p>
+            In a method, this refers to the component that the method is attached to. You can
+access properties on the data object and other methods by using this:
+        </p>
+        <h3>
+            <pre>
+                &lt;div id="app"&gt;
+                    &lt;p&gt;The sum of the positive numbers is {{ getPositiveNumbersSum() }}&lt;/p&gt;
+                   &lt;/div&gt;
+                   &lt;script&gt;
+                    new Vue({
+                    el: '#app',
+                    data: {
+                    numbers: [-5, 0, 2, -1, 1, 0.5]
+                    },
+                    methods: {
+                    getPositiveNumbers() {
+                    // Note that we're now using this.numbers
+                    // to refer directly to the data object.
+                    return this.numbers.filter((number) =&gt; number &gt;= 0);
+                    },
+                    getPositiveNumbersSum() {
+                    return this.getPositiveNumbers().reduce((sum, val) =&gt; sum + val);
+                    }
+                    }
+                    });
+                   &lt;/script&gt;
+            </pre>
+        </h3>
+        <p>
+            Here, this.numbers in getPositiveNumbers refers to the numbers array in the data
+object that we were previously passing in as an argument; this.getPositiveNum
+bers() refers to the other method with that name.
+
+        </p>
+        <p>
+            You’ll see in future sections that you can access other things by using this too.
+        </p>
+        <h1 translate="no">
+            Computed Properties
+        </h1>
+        <p>
+            Computed properties sit halfway between properties of the data object and methods:
+you can access them as if they were properties of the data object, but they are specified as functions.
+        </p>
+        <p>
+            Check out the following example, which takes the data stored as numbers, adds them
+all together, and outputs the total to the page:
+        </p>
+        <h3>
+            <pre>
+                &lt;div id="app"&gt;
+                    &lt;p&gt;Sum of numbers: {{ numberTotal }}&lt;/p&gt;
+                   &lt;/div&gt;
+                   &lt;script&gt;
+                    new Vue({
+                    el: '#app',
+                    data: {
+                    numbers: [5, 8, 3]
+                    },
+                    computed: {
+                    numberTotal() {
+                    return numbers.reduce((sum, val) =&gt; sum + val);
+                    }
+                    }
+                    });
+                   &lt;/script&gt;
+            </pre>
+        </h3>
+        <p>
+            Although we could write the entire statement to calculate the total in the template, it’s
+much more convenient and readable to have it defined elsewhere. We can also access
+it in methods, other computed properties, and anywhere else in the component by
+using this. As with methods, when numbers changes, numberTotal changes too, and
+the change is reflected in the template.
+        </p>
+        <p>
+            But what’s the difference between using computed properties and methods, aside
+from the obvious syntax difference? Well, there are a couple.
+        </p>
+        <p>
+            The first is that computed properties are cached: if you call a method multiple times
+in a template, the code inside the method will be run every single time the method is
+called, whereas if a computed property is called multiple times, the code inside will be
+run only once, and every time after that, the cached value will be used. The code will
+be run again only when a dependency of the method changes: for example, in the
+previous code sample, if we push a new item to basketItems, the code inside basket
+Total is run again to get the new value. This is good if you’re doing something potentially resource intensive, as it ensures that the code will not be run more than
+necessary.
+        </p>
+<p>You can see this behavior by adding a console.log() statement to a computed property that is repeatedly called. You can observe that the console.log() statement, and
+    thus the entire computed property, is evaluated only when the value changes:</p>
+    <h3>
+        <pre>
+            &lt;script&gt;
+                new Vue({
+                el: '#app',
+                data: () =&gt; ({
+                value: 10,
+                }),
+                computed: {
+                doubleValue() {
+                console.log('doubleValue computed property changed');
+                return this.value * 2;
+                }
+                }
+                });
+               &lt;/script&gt;
+        </pre>
+    </h3>
+    <p>
+        The string will be logged to the console only once when the app is initialized and
+once every time value changes
+    </p>
+    <p>
+        The other difference between computed properties and methods is that in addition to
+being able to get values of computed properties, as shown in the previous example, it’s
+possible to set values on computed properties and do something with the set value.
+You can do that by changing the computed property from a function to an object
+with get and set properties. For example, let’s say we want to add the ability to add
+new items to the numbers array by adding or subtracting them from numberTotal. We
+can do that by adding a setter that will compare the new value to the old value, and
+then append the difference to the numbers array:
+    </p>
+    <h3>
+        <pre>
+            &lt;div id="app"&gt;
+                &lt;p&gt;Sum of numbers: {{ numberTotal }}&lt;/p&gt;
+               &lt;/div&gt;
+               &lt;script&gt;
+                new Vue({
+                el: '#app',
+                data: {
+                numbers: [5, 8, 3]
+                },
+                computed: {
+                numberTotal: {
+                get() {
+                return numbers.reduce((sum, val) =&gt; sum + val);
+                },
+                set(newValue) {
+                const oldValue = this.numberTotal;
+                const difference = newValue - oldValue;
+                this.numbers.push(difference).
+                }
+                }
+                }
+                });
+               &lt;/script&gt;
+        </pre>
+    </h3>
+    <p>
+        Now, calling this.numberTotal += 5 somewhere else in the component will cause
+the number 5 to be added to the end of the numbers array—neat!
+    </p>
+    <h1>The Data Object, Methods, or Computed Properties?</h1>
+    <p>
+        You’ve met the data object, where you can store data such as strings, arrays, and
+objects in an object; you’ve met methods, where you can store functions and call them
+from your templates; and you’ve met computed properties, where you can store functions and call them as if they were properties in the data object. But which should you
+use, and when?
+Each has its uses and is best used in combination with one another, but some of them
+are better for certain tasks than others. For example, if you’re accepting an argument,
+you definitely want to use a method, not data or a computed property: neither of
+them can accept arguments.
+The data object is best for pure data: you want to put data somewhere to use in your
+template or in a method or computed property, and you want to leave it there. You
+might update it later.
+Methods are best when you want to add functions to your templates: you pass them
+data, and they do something with that data and possibly return different data.
+Computed properties are best for performing more-complicated expressions that you
+wouldn’t want to be using in your template because they’re too long or you’d have to
+repeat yourself too often. They usually work with other computed properties or your
+data. They’re basically like an extended, more powerful version of the data object.
+    </p>
+    <h3>
+        <pre>
+            Table 1-1. the data object versus methods versus computed properties
+                Readable?    Writable?   Accepts    Computed?  Cached?
+                                        arguments? 
+The data object   Yes         Yes          No         No          N/A, as it’s not
+computed
+
+Methods           Yes          No          Yes       Yes             No
+Computed
+properties       Yes           Yes          No        Yes            Yes
+
+        </pre>
+    </h3>
+    <p>
+        This may look daunting, but it’s something that’s easy to get a hang of through use!
+    </p>
+    <h1 translate="no">Watchers</h1>
+    <p>Watchers allow us to watch a property of the data object or a computed property for
+        changes</p>
+        <p>If you’re coming to Vue from another framework, you may have been wondering how
+            to watch something for changes and waiting for this feature. Be careful, though! In
+            Vue, there’s usually a better way to do something than to use a watcher—usually,
+            using a computed property. For example, instead of setting data and then watching it
+            for changes, using a computed property with a setter is a much better way to do it.</p>
+        <p>Watchers are easy to use: just specify the name of the property to watch. For example,
+            to watch this.count for changes:</p>
+        <h3>
+            <pre>
+                &lt;script&gt;
+                    new Vue({
+                    el: '#app',
+                    data: {
+                    count: 0
+                    },
+                    watchers: {
+                    count() {
+                    // this.count has been changed!
+                    }
+                    }
+                    });
+                   &lt;/script&gt;
+            </pre>
+        </h3>
+        <p>
+            Although most simple examples don’t require watchers, they are good for performing
+asynchronous operations. For example, let’s say we have an input that a user can type
+in, but we want to display on the page what was in the input five seconds ago. To do
+that, you can use v-model to sync the value of the input to your data object, and then
+watch that value for changes and in the watcher write the value to another property of
+the data object after a delay:
+        </p>
+        <h3>
+            <pre>
+                &lt;div id="app"&gt;
+                    &lt;input type="text" v-model="inputValue"&gt;
+                    &lt;p&gt;Five seconds ago, the input said "{{ oldInputValue }}".&lt;/p&gt;
+                   &lt;/div&gt;
+                   &lt;script&gt;
+                    new Vue({
+                    el: '#app',
+                    data: {
+                    inputValue: '',
+                    oldInputValue: ''
+                    },
+                    watch: {
+                    inputValue() {
+                    const newValue = this.inputValue;
+                    setTimeout(() => {
+                        this.oldInputValue = newValue;
+                        }, 5000);
+                        }
+                        }
+                        });
+                       &lt;/script&gt;
+            </pre>
+        </h3>
+        <p>
+            Note that in this example, we’re writing this.inputValue to a variable local to that
+function: this is because otherwise, when the function given to setTimeout is called,
+this.inputValue will have updated to the latest value!
+        </p>
+        <h1 translate="no">Watching Properties of Objects in the Data Object</h1>
+        <p>
+            Sometimes you might have a whole object stored in your data object. To watch a
+property of that object for changes, you can specify the watcher name with dots in it,
+as if you were reading the object:
+        </p>
+        <h3>
+            <pre>
+                new Vue({
+                    data: {
+                    formData: {
+                    username: ''
+                    }
+                    },
+                    watch: {
+                    'formData.username'() {
+                    // this.formData.username has changed
+                    }
+                    }
+                   });
+            </pre>
+        </h3>
+        <h1 translate="no">Getting the Old Value</h1>
+        <p>Watchers are passed two arguments when their watched property is changed: the new
+            value of the watched property, and the old value. This can be useful for seeing what
+            has changed:</p>
+            <h3>
+                <pre>
+                    watch: {
+                        inputValue(val, oldVal) {
+                        console.log(val, oldVal);
+                        }
+                       }
+                </pre>
+            </h3>
+            <p>
+                val equals (in this case) this.inputValue. I usually find myself using the latter
+instead.
+            </p>
+            <h1 translate="no">Deep Watching</h1>
+            <p>
+                When watching an object, you might want to watch the entire object for changes, not
+just the property. By default, the watcher won’t fire if you’re watching formData and
+you modify formData.username; it will fire only if you replace the entire formData
+property.
+            </p>
+            <p>
+                Watching the entire object is known as a deep watch, and we can tell Vue to do this by
+setting the deep option to true:
+
+            </p>
+            <h3>
+                <pre>
+                    watch: {
+                        formData: {
+                        handler() {
+                        console.log(val, oldVal);
+                        },
+                        deep: true
+                        }
+                       }
+                </pre>
+            </h3>
+            <h1 translate="no">Filters</h1>
+            <p>
+                Filters, also often seen in other templating languages, are a convenient way of manipulating data in your templates. I find them great for making simple display changes to
+strings and numbers: for example, changing a string to the correct case or displaying
+a number in a human-readable format.
+            </p>
+            <p>
+                Take the following code sample:
+            </p>
+            <h3>
+                <pre>
+                    &lt;div id="app"&gt;
+                        &lt;p&gt;Product one cost: ${{ (productOneCost / 100).toFixed(2) }}&lt;/p&gt;
+                        &lt;p&gt;Product two cost: ${{ (productTwoCost / 100).toFixed(2) }}&lt;/p&gt;
+                        &lt;p&gt;Product three cost: ${{ (productThreeCost / 100).toFixed(2) }}&lt;/p&gt;
+                       &lt;/div&gt;
+                       &lt;script&gt;
+                        new Vue({
+                        el: '#app',
+                        data: {
+                        productOneCost: 998,
+                        productTwoCost: 2399,
+                        productThreeCost: 5300
+                        }
+                        });
+                       &lt;/script&gt;
+                </pre>
+            </h3>
+            <p>It works, but there’s a lot of duplication. For every item, we’re doing the math to convert it from cents to dollars, displaying it to two decimal places, and adding the dollar
+                sign. Although we can definitely split that logic into a method, this time we’ll split
+                that logic into a filter, as it’s more readable and can be added globally:</p>
+        <h3>
+            <pre>
+                &lt;div id="app"&gt;
+                    &lt;p&gt;Product one cost: {{ productOneCost | formatCost }}&lt;/p&gt;
+                    &lt;p&gt;Product two cost: {{ productTwoCost | formatCost }}&lt;/p&gt;
+                    &lt;p&gt;Product three cost: {{ productThreeCost | formatCost }}&lt;/p&gt;
+                   &lt;/div&gt;
+                   &lt;script&gt;
+                    new Vue({
+                    el: '#app',
+                    data: {
+                    productOneCost: 998,
+                    productTwoCost: 2399,
+                    productThreeCost: 5300
+                    },
+                    filters: {
+                    formatCost(value) {
+                    return '$' + (value / 100).toFixed(2);
+                    }
+                    }
+                    });
+                   &lt;/script&gt;
+            </pre>
+        </h3>
+        <p>
+            That’s a lot better—much less duplication, much easier to read, and much more
+maintainable. Now if we decide we want to add logic to it—say, we want to add currency conversion functionality—we have to do it only once instead of changing the
+code every place it is used.
+        </p>
+        <p>
+            You can use multiple filters in the same expression by chaining them together. For
+example, if we have a round filter that rounds a number to the nearest integer, you
+could use both filters together by writing {{ productOneCost | round | format
+Cost }}. The round filter would be called first, and then the value returned by that
+filter would be passed to the formatCost filter and output to the page.
+        </p>
+        <p>
+            Filters can also take arguments. In the following example, the given string would be
+passed into the filter function as the second argument:
+        </p>
+        <h3>
+            <pre>
+                &lt;div id="app"&gt;
+                    &lt;p&gt;Product one cost: {{ productOneCost | formatCost('$') }}&lt;/p&gt;
+                   &lt;/div&gt;
+                   &lt;script&gt;
+                    new Vue({
+                    el: '#app',
+                    data: {
+                    productOneCost: 998,
+                    },
+                    filters: {
+                    formatCost(value, symbol) {
+                    return symbol + (value / 100).toFixed(2);
+                    }
+                    }
+                    });
+                   &lt;/script&gt;
+            </pre>
+        </h3>
+        <p>
+            In addition to working with interpolation, you can use filters with v-bind when binding values to arguments:
+        </p>
+        <h3>
+            <pre>
+                &lt;div id="app"&gt;
+                    &lt;input type="text" v-bind:value="productCost | formatCost('$')"&gt;
+                   &lt;/div&gt;
+            </pre>
+        </h3>
+        <p>
+            You can also use Vue.filter() to register filters instead of on a per-component basis:
+        </p>
+        <h3>
+            <pre>
+                Vue.filter('formatCost', function (value, symbol) {
+                    return symbol + (val / 100).toFixed(2);
+                   });
+            </pre>
+        </h3>
+        <p>
+            This is good for registering filters that you’re going to use all over your app. I generally stick all of my filters in a separate file called filters.js.
+        </p>
+        <p>
+            Using filters carries two small caveats. The first is that filters are the only place where
+you can’t use this to refer to methods and data on the components. This is intentional: it’s because filters are supposed to be pure functions, meaning that the function takes input and returns the same output every time without referring to any
+external data. If you want to access other data in a filter, pass it in as an argument.
+        </p>
+        <p>
+            The other caveat is that you can use filters only in interpolations and v-bind directives. In Vue 1, it was possible to use them anywhere you could use expressions; for
+example, in v-for directives:
+
+        </p>
+        <h3>
+            <pre>
+                &lt;li v-for="item in items | filterItems"&gt;{{ item }}&lt;/li&gt;
+            </pre>
+        </h3>
+        <p>
+            This is no longer the case in Vue 2, and you’ll have to use a method or computed
+property in the preceding case.
+        </p>
+        <h1 translate="no">Accessing Elements Directly Using ref</h1>
+        <p>Sometimes you might find yourself needing to access an element directly in the
+            DOM; maybe you’re using a third-party library that isn’t written to work with Vue, or
+            maybe you want to do something that Vue can’t quite handle itself. You can use ref to
+            access the element directly without having to use querySelector or one of the other
+            native ways to select an element from the DOM.</p>
+            <p>To access an element using a ref, set the ref attribute of the element to a string that
+                you can access the element using:</p>
+            <h3><pre>&lt;canvas ref="myCanvas"&gt;&lt;/canvas&gt;</pre></h3>
+            <p>
+                Then in your JavaScript, the element will be stored on the this.$refs object as whatever you set the ref attribute to. In this case, you can access it by using this.
+$refs.myCanvas.
+            </p>
+            <p>
+                Using ref is especially useful in components. It’s possible that the same code could
+appear multiple times in the same page, meaning that you can’t add a unique class
+            </p>
+            <p>
+                and use querySelector at all. this.$refs contains only the refs for the current component, meaning that if you call this.$refs.blablabla in a component, it will
+always refer to the element in that component, not anywhere else in the document.
+            </p>
+            <h1 translate="no">Inputs and Events</h1>
+            <p>
+                Until this point, pretty much everything you’ve seen has been about displaying data—
+we haven’t made anything that interactive yet. Now, I’ll introduce you to event binding in Vue.
+            </p>
+            <p>
+                To bind an event listener to an element, you can use the v-on directive. It takes the
+name of the event as the argument, and the event listener as the passed value. For
+example, to increase the value of counter by one when a button is clicked, you can
+write the following:
+            </p>
+            <h3>
+                <pre>
+                    &lt;button v-on:click="counter++"&gt;Click to increase counter&lt;/button&gt;
+&lt;p&gt;You've clicked the button {{ counter }}&lt;/p&gt; times.
+                </pre>
+            </h3>
+            <p>You can also provide the name of a method that will be called when the button is
+                clicked:</p>
+        <h3>
+            <pre>
+                &lt;div id="app"&lt;
+                    &lt;button v-on:click="increase"&lt;Click to increase counter&lt;/button&lt;
+                    &lt;p&lt;You've clicked the button {{ counter }}&lt;/p&lt; times.
+                   &lt;/div&lt;
+                   &lt;script&lt;
+                    new Vue({
+                    el: '#app',
+                    data: {
+                    counter: 0
+                    },
+                    methods: {
+                    increase(e) {
+                    this.counter++;
+                    }
+                    }
+                    });
+                   &lt;/script&lt;
+            </pre>
+        </h3>
+        <p>That works the same as the previous example</p>
+        <p>One significant difference between using a method and putting the code inline is that
+            if you use a method, the event object is passed in as the first argument. This event
+            object is the native DOM event that you would get if you had added the event listener
+            by using JavaScript’s built-in .addEventListener() method and can be useful, for
+            getting the keyCode of a keyboard event, for example.</p>
+            <p>
+                You can access the event when writing code inline, too, as the $event variable. This
+can be useful when you’re adding the same event listener to multiple elements and
+want to know which one it was triggered from.
+            </p>
+            <h1 translate="no">The v-on Shortcut</h1>
+            <p>
+                Similarly to the v-bind directive, v-on also has a shorter way of writing it. Instead of
+writing v-on:click, you can write just @click. <br>
+This is the same as the previous example:
+            </p>
+
+            <h3>
+                <pre>
+                    &lt;button @click="increase"&gt;Click to increase counter&lt;/button&gt;
+                </pre>
+            </h3>
+        <p>
+            I nearly always use the short version instead of writing v-on.
+        </p>
+        <h1>
+            Event Modifiers
+        </h1>
+        <p>
+            You can also do a load of things to modify the event handler or the event itself.
+        </p>
+        <p>
+            To prevent the default action of the event from happening—for example, to stop a
+page navigation from happening when a link is clicked—you can use the .prevent
+modifier:
+        </p>
+        <h3>
+            <pre>
+                &lt;a @click.prevent="handleClick"&gt;...&lt;/a&gt;
+
+            </pre>
+        </h3>
+        <p>
+            To stop the event from propagating so that the event isn’t triggered on the parent elements, you can use the .stop modifier:
+
+        </p>
+        <h3>
+            <pre>
+                &lt;button @click.stop="handleClick"&gt;...&lt;/button&gt;
+            </pre>
+        </h3>
+        <p>
+            To have the event listener be triggered only the first time the event is fired, you can
+use the .once modifier:
+        </p>
+        <h3>
+            <pre>
+                &lt;button @click.once="handleFirstClick"&gt;...&lt;/button&gt;
+
+            </pre>
+        </h3>
+        <p>
+            To use capture mode, meaning that the event will be triggered on this element before
+it is dispatched on the elements below it in the tree (versus bubble mode, in which it’s
+fired on the element first and then bubbles up the DOM), you can use the .capture
+modifier:
+        </p>
+        <h3>
+            <pre>
+                &lt;div @click.capture="handleCapturedClick"&gt;...&lt;/div&gt;
+            </pre>
+        </h3>
+        <p>
+            To trigger the handler when the event was triggered on the element itself, not a child
+element (basically, when event.target is the element the handler is being added to)
+you can use the .self modifier:
+        </p>
+        <h3>
+            <pre>
+                &lt;div @click.self="handleSelfClick"&gt;...&lt;/div&gt;
+            </pre>
+        </h3>
+    <p>
+        You can also specify just the event and modifier without giving it a value, and you can
+chain modifiers together. For example, the following will stop a click event from
+propagating any further down the tree—but only the first time:
+    </p>
+    <h3>
+        <pre>
+            &lt;div @click.stop.capture.once&gt;&lt;/div&gt;
+        </pre>
+    </h3>
+<p>
+    In addition to those event modifiers, there are also key modifiers. These are used on
+keyboard events so that you can fire the event only when a certain key is pressed.
+Consider the following:
+</p>
+
+<h3>
+    <pre>
+        &lt;div id="app"&gt;
+            &lt;form @keyup="handleKeyup"&gt;...&lt;/form&gt;
+           &lt;/div&gt;
+           &lt;script&gt;
+            new Vue({
+            el: '#app',
+            methods: {
+            handleKeyup(e) {
+            if (e.keyCode === 27) {
+            // do something
+            }
+            }
+            }
+            });
+           &lt;/script&gt;
+    </pre>
+</h3>
+
+<p>
+    The code inside the if statement will run only when the key with keyCode 27—the
+Escape key—is pressed. However, Vue has a way to do this built in as a modifier. You
+can specify the key code as the modifier, like so:
+</p>
+<h3>
+    <pre>
+        &lt;form @keyup.27="handleEscape"&gt;...&lt;/form&gt;
+    </pre>
+</h3>
+<p>
+    Now, handleEscape will be be triggered only when the Escape key is pressed. Aliases
+are also available for the most used keys: .enter, .tab, .delete,
+.esc, .space, .up, .down, .left, and .right. Instead of writing @keyup.27 and having to remember which key 27 is, you can just write @keyup.esc.
+
+</p>
+<p>
+    As of Vue 2.5.0, you can use any key name from the key property of the event. For
+example, when you press the left Shift key, e.key equals ShiftLeft. To listen for
+when the Shift key is released, you can use the following
+</p>
+<h3>
+    <pre>
+        &lt;form @keyup.shift-left="handleShiftLeft"&gt;...&lt;/form&gt;
+    </pre>
+</h3>
+<p>
+    Similar to the key modifiers, three mouse button modifiers can be added to mouse
+events: .left, .middle, and .right.
+</p>
+<p>
+    Some modifiers exist for modifier keys such as Ctrl and Shift: .ctrl, .alt, .shift,
+and .meta. The first three modifiers are fairly self-explanatory, but .meta is less clear:
+on Windows, it’s the Windows key, and on macOS, it is the Command key
+</p>
+<p>
+    Finally, an .exact operator will trigger the event handler only if the specified keys
+and no other keys are pressed. For example:
+
+</p>
+<h3>
+    <pre>
+        &lt;input @keydown.enter.exact="handleEnter"&gt;
+    </pre>
+</h3>
+<p>
+    That will fire when Enter is pressed, but not when any other keys—for example,
+Command-Enter or Ctrl-Enter—are pressed.
+</p>
+<h1 translate="no">Life-Cycle Hooks</h1>
+<p>
+    You’ve seen a couple of times now that if you specify a function as the created property on a component or your Vue instance, it is called when the component is, well,
+created. This is an example of what’s known as a life-cycle hook, a series of functions
+that are called at various points throughout the life cycle of a component—all the way
+from when it created and added the DOM, to when it is destroyed.
+</p>
+<p>
+    Vue has eight life-cycle hooks, but they’re pretty easy to remember because four of
+them are just before hooks that are fired before the other ones
+</p>
+<p>
+    Here’s the basic life cycle of an object: first, the Vue instance is initiated when new
+Vue() is called. The first hook, beforeCreate, is called, and reactivity is initiated.
+Then the created hook is called—you can see how this works with the hook names.
+The “before” hook is called before the thing that triggers the hook happens, and then
+the actual hook is called afterward. Next, the template is compiled—either from the
+template or render options, or from the outerHTML of the element that Vue was initialized to. The DOM element is now ready to be created, so the beforeMount hook is
+fired, the element is created, and then the mounted hook is fired.
+</p>
+<p>
+    One thing to be careful of is that as of Vue 2.0, the mounted hook doesn’t guarantee
+that the element has been added to the DOM. To make sure that it has been added,
+you can call Vue.nextTick() (also available as this.$nextTick()) with a callback
+method containing the code you want to run after the element is definitely added to
+the DOM. For example:
+</p>
+<h3>
+    <pre>
+        &lt;div id="app"&gt;
+            &lt;p&gt;Hello world&lt;/p&gt;
+           &lt;/div&gt;
+           &lt;script&gt;
+            new Vue({
+            el: '#app',
+            mounted() {
+            // Element might not have been added to the DOM yet
+            this.$nextTick(() =&gt; {
+            // Element has definitely been added to the DOM now
+            });
+            }
+            });
+           &lt;/script&gt;
+    </pre>
+</h3>
+
+<p>
+    Four hooks have been fired so far, as the instance is initialized and then added to the
+DOM, and our users can now see our component. Maybe our data updates, though, so the DOM is updated to reflect that change. Before the change is made, another
+hook is fired, beforeUpdate, and afterward, the updated hook is fired. This hook can
+be fired multiple times as multiple changes to the DOM are made.
+</p>
+
+<p>
+    Finally, we’ve witnessed the creation and life of our component, but it’s time for it to
+go. Before it is removed from the DOM, the beforeDestroy hook is fired, and after it
+has been removed, the destroyed hook is fired.
+</p>
+<p>
+    Those are all the hooks that are fired throughout the life cycle of a Vue instance. Here
+they are again, but this time from the point of view of the hooks, not the instance:
+</p>
+<h3>
+    <pre>
+• beforeCreate is fired before the instance is initialized.
+• created is fired after the instance has been initialized but before it is added to the
+DOM.
+• beforeMount is fired after the element is ready to be added to the DOM but
+before it has been.
+• mounted is fired after the element has been created (but not necessarily added to
+the DOM: use nextTick for that).
+• beforeUpdate is fired when there are changes to be made to the DOM output.
+• updated is fired after changes have been written to the DOM.
+• beforeDestroy is fired when the component is about to be destroyed and
+removed from the DOM.
+• destroyed is fired after the component has been destroyed.
+    </pre>
+</h3>
+
+
+<p>
+    While there do seem to be a lot of hooks, you have to remember only four (created,
+mounted, updated, and destroyed), and you can work out the other four from there.
+</p>
+<h1 translate="no">
+    Custom Directives
+</h1>
+<p>
+    In addition to the built-in directives such as v-if, v-model, and v-html, it’s possible
+to create your own custom directives. Directives are great for times when you want to
+do something directly with the DOM—if you find that you’re not accessing the
+DOM, you’d probably be better off with a component instead.
+</p>
+<p>
+    As a simple example, let’s build a v-blink directive, which simulates the behavior of
+the &lt;blink&gt; tag. We’ll be able to use it like this:
+</p>
+<p>
+    &lt;p v-blink&gt;This content will blink&lt;/p&gt;
+</p>
+<p>
+    Adding a directive is similar to adding a filter: you can pass it in the directives
+property of your Vue instance or component, or else you can register it globally using
+Vue.directive(). You pass the name of the directive, plus an object containing hook functions that are run at various points through the life of the element the directive
+has been added to.
+</p>
+<p>
+    The five hook functions are bind, inserted, update, componentUpdated, and unbind.
+I’ll explain them all in moment, but for now we’re just going to use the bind hook,
+which is called when the directive is bound to the element. In the hook, we’ll toggle
+the visibility of the element once a second:
+
+</p>
+<h3>
+    <pre>
+        Vue.directive('blink', {
+            bind(el) {
+            let isVisible = true;
+            setInterval(() => {
+            isVisible = !isVisible;
+            el.style.visibility = isVisible ? 'visible' : 'hidden';
+            }, 1000);
+            }
+           });
+    </pre>
+</h3>
+<p>
+    Now, any element the directive is applied to will blink once a second—just what we
+wanted.
+</p>
+<p>
+    Directives have multiple hook functions, just as the Vue instance and components
+have life-cycle hooks. They’re named differently and don’t do exactly the same thing
+as the life-cycle hooks, so let’s go through what they do now:
+</p>
+
+<h3>
+    <pre>
+• The bind hook is called when the directive is bound to the element.
+• The inserted hook is called when the bound element has been inserted into its
+parent node—but just as with mounted, this doesn’t guarantee that the element
+has been added to the document yet. Use this.$nextTick for that.
+• The update hook is called when the parent of the component the directive is
+bound to is updated, but possibly before the component’s children have updated.
+• The componentUpdated hook is similar to the update hook, but is called after the
+component’s children have updated too.
+• The unbind hook is used for teardown, and is called when the directive is
+unbound from the element.
+    </pre>
+</h3>
+<p>
+    I find myself most commonly using the bind and update hooks. Conveniently, if you
+want to use just those two hooks, there’s a shorthand way of doing it—you can omit
+the object and specify a function that will be used as both hooks, as the argument:
+
+</p>
+<h3>
+    <pre>
+        Vue.directive('my-directive', (el) => {
+            // This code will run both on "bind" and "update"
+           });
+    </pre>
+</h3>
+
+<h1 translate="no">
+    Hook Arguments
+</h1>
+<p>
+    You’ve seen before that directives accept arguments (v-bind:class), modifiers (von.once), and values (v-if="expression"). It’s possible to access all of these by using
+the second argument passed to the hook function, binding.
+</p>
+<p>
+    If using v-my-directive:example.one.two="someExpression" to call our directive,
+the binding object will contain the following properties:
+</p>
+<h3>
+    <pre>
+• The name property is the name of the directive without the v-. In this case, it’s mydirective.
+• The value property is the value passed to the directive. In this case, it would be
+whatever someExpression evaluates to. For example, if the data object were equal
+to { someExpression: hello world }, value would equal hello world.
+• The oldValue property is the previous value passed to the directive. It’s available
+only in update and componentUpdated. With our example, if we had a different
+value for someExpression, the update hook would be called with the new value
+as value and the old value as oldValue.
+• The expression property is the value of the attribute as a string before evaluation. In this case, it would literally be someExpression.
+• The arg property is the argument passed to the directive; in this case, example.
+• The modifiers property is an object containing any modifiers passed to the
+directive. In this case, it will equal { one: true, two: true }.
+
+    </pre>
+</h3>
+<p>
+    To demonstrate how to use an argument, let’s modify our hook directive to take an
+argument indicating how quickly the element should blink:
+</p>
+<h3>
+    <pre>
+        Vue.directive('blink', {
+            bind(el, binding) {
+            let isVisible = true;
+            setInterval(() => {
+            isVisible = !isVisible;
+            el.style.visibility = isVisible ? 'visible' : 'hidden';
+            }, binding.value || 1000);
+            }
+           });
+    </pre>
+</h3>
+<p>
+    I’ve added the binding argument, and changed the timing on the setInterval to
+binding.value || 1000 instead of just 1000. This example is lacking any logic to
+update the component if the argument changes, though. In order to do that, we’d
+need to store the ID returned by setInterval on a data attribute on the object and
+cancel the old interval before creating a new one in the update hook.
+</p>
+<h1 translate="no">
+    Transitions and Animations
+</h1>
+<p>
+    Vue contains a plethora of functionality that you can use to power animations and
+transitions in your Vue apps—from helping you with CSS transitions and JavaScript
+animations when elements enter or leave the page or are modified, to transitioning
+between components and even animating the data itself. There’s far too much to
+cover in a general book on Vue, so I’ll focus on the stuff I’ve found myself using most
+frequently, and you can check out the Vue documentation on transitions (with some
+really cool demos!) yourself later.
+</p>
+<p>
+    To start, let’s look at the &lt;transition&gt; component and how to use it with CSS transitions to animate elements in and out of our document.
+</p>
+
+<h2 translate="no">CSS Transitions</h2>
+<p>
+    CSS transitions are good for simple animations, in which you’re just transitioning one
+or more CSS properties from one value to another. For example, you can transition
+color from blue to red, or opacity from 1 to 0. Vue provides a &lt;transition&gt; component that adds classes to a contained element with a v-if directive, which you can
+use to apply CSS transitions when an element is added or removed.
+</p>
+<p>
+    Throughout this section, we’ll be referring to the following template, which has a button, and an element that toggles visibility when the button is pressed:
+</p>
+<h3>
+    <pre>
+        &lt;div id="app"&gt;
+            &lt;button @click="divVisible = !divVisible"&gt;Toggle visibility&lt;/button&gt;
+            &lt;div v-if="divVisible"&gt;This content is sometimes hidden&lt;/div&gt;
+           &lt;/div&gt;
+           &lt;script&gt;
+            new Vue({
+            el: '#app',
+            data: {
+            divVisible: true
+            }
+            });
+           &lt;/script&gt;
+    </pre>
+</h3>
+
+<p>
+    Currently if you click the button, the content in the div element will be immediately
+hidden and shown again, with no transition.
+</p>
+<p>
+    Let’s say we want to add a simple transition to it: we want it to fade in and out when
+the visibility is toggled. To do that, we can wrap the div in a transition component,
+like so:
+</p>
+<h3>
+    <pre>
+        &lt;transition name="fade"&gt;
+            &lt;div v-if="divVisible"&gt;This content is sometimes hidden&lt;/div&gt;
+           &lt;/transition&gt;
+           
+    </pre>
+</h3>
+<p>
+    That by itself won’t do anything (it will behave exactly the way it did before we added
+the &lt;transition&gt; element), but if we add the following CSS, we’ll get our fade transition:
+</p>
+<h3>
+    <pre>
+        .fade-enter-active, .fade-leave-active {
+            transition: opacity .5s;
+           }
+           .fade-enter, .fade-leave-to {
+            opacity: 0;
+           }
+    </pre>
+</h3>
+<p>
+    Now, when you click the button to toggle visibility, the element fades in and out of
+the page instead of being added or removed instantly as it was before.
+</p>
+<p>
+    The way that this works is that Vue takes the name of the transition and uses it to add
+classes to the contained element at various points through the transition. Two types
+of transition, enter and leave, are applied when the element is added and removed
+from the document, respectively. The classes are as follows:
+</p>
+<p>{name}-enter <br>
+    This class is applied to the element as it is added to the DOM, and immediately
+    removed after one frame. Use it to set CSS properties that you want to be
+    removed as the element transitions in.</p>
+<p>
+    {name}-enter-active <br>
+This class is applied to the element for the entirety of the animation. It’s added at
+the same time the -enter class is added, and removed after the animation has
+completed. This class is good for setting the CSS transition property, contain‐
+ing the length of the transition, the properties to transition, and the easings to
+use.
+</p>
+<p>
+    {name}-enter-to <br>
+This class is added to the element at the same time as the -enter class is
+removed. It’s good for setting CSS properties that are added as the element transi‐
+tions in, but I generally find it’s better to transition the inverse of the property on
+the -enter class instead.
+</p>
+<p>
+    {name}-leave <br>
+This class is the equivalent of the -enter class for the leave transitions. It’s added
+when the leave transition is triggered and then removed after one frame. Much
+like the -enter-to class, this class isn’t that useful; it’s better to animate the
+inverse by using -leave-to instead.
+</p>
+<p>
+    {name}-leave-active <br>
+This class is the equivalent of -enter-active, but for the leave transitions. It’s
+applied for the entire duration of the exit transition.
+</p>
+
+<p>
+    {name}-leave-to <br>
+This class is once again the equivalent of -enter-to, but for the leave transitions.
+It’s applied one frame after the transition starts (when -leave is removed) and
+remains until the end of the transition.
+</p>
+
+<p>
+    In practice, I find myself using these four classes the most:
+</p>
+<p>
+    {name}-enter <br>
+This class sets CSS properties to transition during the enter transition.
+</p>
+<p>
+    {name}-enter-active <br>
+This class sets the transition CSS property for the enter transition.
+</p>
+<p>
+    {name}-leave-active <br>
+This class sets the transition CSS property for the leave transition.
+</p>
+<p>
+    {name}-leave-to <br>
+This class sets CSS properties to transition during the leave transition.
+</p>
+<p>
+    So the way the previous code example works is that both the enter and leave transitions are .5s long, and opacity is transitioned (with the default easing), and both on
+enter and leave we are transitioning to and from opacity: 0. We’re fading the element in when it enters the document, and fading it out when it leaves again.
+</p>
+<h1 translate="no">JavaScript Animations</h1>
+<p>
+    In addition to CSS animations, the &lt;transition&gt; component provides hooks that
+        you can use to power JavaScript animations. Using these hooks, you can write animations by using either your own code or a library such as GreenSock or Velocity.
+</p>
+<p>The hooks are similar to their counterparts for CSS transitions:</p>
+<p>
+    before-enter <br>
+This hook is fired before the enter animation starts and is good for setting initial
+values.
+</p>
+<p>
+    enter <br>
+This hook is fired when the enter animation starts and is where you can run the
+animation from. You can use a done callback to indicate when the animation has
+finished.
+</p>
+<p>
+    afterEnter <br>
+This hook is fired when the enter animation has ended.
+</p>
+<p>
+    enterCancelled <br>
+This hook is fired when the enter animation is cancelled.
+</p>
+<p>
+    beforeLeave <br>
+This hook is the leave equivalent of before-enter, and is fired before the leave
+animation starts.
+</p>
+<p>
+    leave <br>
+This hook is the leave equivalent of enter and is where you can run the anima‐
+tion from.
+</p>
+<p>
+    afterLeave <br>
+This hook is fired when the leave animation has ended.
+</p>
+<p>
+    leaveCancelled <br>
+This hook is fired when the leave animation is cancelled.
+</p>
+<p>
+    These hooks are triggered on the &lt;transition&gt; element as events, like so:
+</p>
+<h3>
+    <pre>
+        &lt;transition
+ v-on:before-enter="handleBeforeEnter"
+ v-on:enter="handleEnter"
+ v-on:leave="handleLeave&gt;
+ &lt;div v-if="divVisible"&gt;...&lt;/div&gt;
+&lt;/transition&gt;
+    </pre>
+</h3>
+<p>
+    With those event handlers added, we can add the same effect as in the CSS transition
+example, but using GreenSock instead, like this:
+</p>
+
+<h3>
+    <pre>
+        new Vue({
+            el: '#app',
+            data: {
+            divVisible: false
+            },
+            methods: {
+            handleBeforeEnter(el) {
+            el.style.opacity = 0;
+            },
+            handleEnter(el, done) {
+            TweenLite.to(el, 0.6, { opacity: 1, onComplete: done });
+            },
+            handleLeave(el, done) {
+            TweenLite.to(el, 0.6, { opacity: 0, onComplete: done });
+            }
+            }
+           });
+    </pre>
+</h3>
+<p>
+    Using JavaScript animations, we can create much more complicated animations than
+we can with CSS transitions, including multiple steps, or a different transition every
+time. CSS transitions are generally more performant, though, so stick with them
+unless you need functionality you can’t get with just CSS transitions.
+</p>
+<p>
+    Now that we’ve explored some of the basic things that you can do with Vue, let’s look
+at how you can structure your code by using components.
+</p>
+<h1 translate="no">Summary</h1>
+<p>In this chapter we looked at some of the basics of using Vue:</p>
+<h3>
+    <pre>
+        • We looked at some of the reasons to use Vue.
+• We looked at how you can install and set up Vue using either a CDN or webpack.
+• We looked at the syntax of Vue: how you can use templates, the data object and
+directives to display your data on the page.
+• We looked at the difference between the v-if and v-show directives.
+• We looked at how you can use the v-for directive to loop in templates.
+• We looked at how you can use v-bind to bind a property of the data object to an
+HTML attribute.
+• We looked at how Vue automatically updates the value displayed on the page
+when the data updates: this is called reactivity.
+• We looked at two-way data binding: using v-model to both display data in an
+input and update the data object when the value of the input is changed.
+• We looked at how you can use v-html to set the inner HTML of an element from
+the data object.
+• We looked at how you can use methods to make functions available to your templates and throughout your Vue instance. We also looked at what this means
+inside a method.
+• We looked at how you can use computed properties to create values that you can
+access as if they are properties of the data object, but that are computed at runtime and specified as functions.
+• We looked at how you can use watchers to watch properties of the data object or
+computed properties and do something when they change—but it’s generally a
+good idea to avoid watchers and use computed properties instead.
+• We looked at filters, a convinient way of manipulating data in your templates—
+useful for formatting data, for example.
+• We looked at how you can access elements directly using ref, which is useful if
+you’re using a third-party library that doesn’t work great with Vue, or if you want
+to do something that Vue itself can’t handle.
+• We looked at event binding using v-on, or the short syntax using @ followed by
+the event name.
+• We looked at the life-cycle of a Vue instance and how you can use hooks to execute code on them.
+• We looked at how you can create your own custom directives.
+• We looked at how Vue provides functionality to work with CSS transitions and
+JavaScript animations.
+    </pre>
+</h3>
+
+<a href="chp2.html">Components in Vue.js</a>
+
+</body>
+</html>

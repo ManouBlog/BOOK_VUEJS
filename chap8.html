@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <a href="chap7.html">chap7</a>
+    <h1 translate="no"> chapitre8:Vue from React</h1>
+    <p>
+        If you’ve used React before, you’re probably already familiar with a lot of the concepts
+in Vue. I’ve compiled a list of some of the similarities and differences between the two
+frameworks in this appendix. This section is fairly heavily example based: it’s a lot
+easier to understand the differences and similarities from examples than from me
+writing about it!
+    </p>
+    <h1>Getting Started</h1>
+    <p>
+        Both Vue and React have similar tools that you can use to set up a simple app. React
+has create-react-app, which sets up a webpack configuration to build a React app and
+then hides the configuration from you. Vue has vue-cli, which has various templates
+that you can use to install Vue with webpack, Browserify, or without any build tool at
+all. The vue-cli templates are also configurable and will set up vue-router, unit testing,
+and functional testing (but not vuex) if you want it to—something that create-reactapp will not provide. <br>
+You can also build your own templates to use with vue-cli. Check out Appendix A for
+more information on vue-cli and the templates available to you. <br>
+There’s also a difference in setup when you want just a simple setup. React doesn’t
+work great without a build tool, because you can’t write JSX without a parser; it’s not
+supported in the browser. Nearly every React project uses webpack, and Browserify
+support is limited. Vue doesn’t require JSX (although you can use it if you want it), so
+it’s possible to use it in the browser without a build tool. Most projects don’t do this,
+as having a module bundler and an ES2015 transpiler is generally required in all
+projects, but it’s nice to have the option. It’s also great for beginners, as you can start
+writing Vue without having to worry about a complicated build setup.
+    </p>
+    <h1>
+        Similarities
+    </h1>
+    <p>Many similarities exist between React and Vue. Vue was designed to take the best bits
+        of Angular and React and combine them, so if there’s a thing you really like about
+        React, chances are you’ll be able to find it in Vue too. This section explains and demonstrates some of the similarities.</p>
+<h1>Components</h1>
+<p>
+    Both React and Vue are heavily component-driven. Using components is a great way
+of working: it allows you to split your application into sensible, reusable chunks that
+are each responsible for a distinct part of your application. This makes them easy to
+test too. Every component in both React and Vue has its own state: in React, it’s called
+state and stored using the setState() method, and in Vue, it’s called data, and is
+stored by mutating the data object. You can also pass data into components, which is
+done basically the same way in both libraries and called props. The syntax is slightly
+different, but that is covered in “Differences” on page 141.
+</p>
+<p>
+    Let’s demonstrate with a simple component that accepts a user ID as a prop, and then
+makes an API request and displays the resulting user data on the page.
+</p>
+<p>Here’s the component in React:</p>
+<h3>
+    <pre translate="no">
+        class UserView extends React.Component {
+            constructor(props) {
+            super(props);
+            this.state = {
+            user: undefined
+            };
+            fetch(`/api/user/${this.props.userId}`)
+            .then((res) => res.json())
+            .then((user) => {
+            this.setState({ user });
+            });
+            },
+            render() {
+            const user = this.state.user;
+            return (
+            &lt;div&gt;
+            { user ? (
+            &lt;p&gt;User name: {user.name}&lt;/p&gt;
+            ) : (
+            &lt;p&gt;Loading…&lt;/p&gt;
+            ) }
+            &lt;/div&gt;
+            );
+        }
+    };
+    UserView.propTypes = {
+     userId: PropTypes.number
+    };
+    </pre>
+</h3>
+<p>
+    And here it is in Vue:
+</p>
+<h3>
+    <pre translate="no">
+        const UserView = {
+ template: `
+ &lt;div&gt;
+ &lt;p v-if="user"&gt;User name: {{ user.name }}&lt;/p&gt;
+ &lt;p v-else&gt;Loading...&lt;/p&gt;
+ &lt;/div&gt;`,
+ props: {
+ userId: {
+ type: Number,
+ required: true
+ }
+ },
+ data: () =&gt; ({
+ user: undefined
+ },
+ mounted() {
+ fetch(`/api/user/${this.userId}`)
+ .then((res) =&gt; res.json())
+ .then((user) =&gt; {
+ this.user = user;
+ });
+ }
+};
+    </pre>
+</h3>
+<p>
+    Both components are called in similar ways.
+</p>
+<p>In React:</p>
+<h3>
+    <pre>
+        &lt;UserGuide userId={10} /&gt;
+    </pre>
+</h3>
+<p>And in Vue:</p>
+<h3>
+    <pre>
+        &lt;UserGuide :userId="10" /&gt;
+    </pre>
+</h3>
+<p>
+    Both React and Vue have one-way data flow. You can pass data into components
+using props, but you cannot modify props directly.
+</p>
+<h1>Reactivity</h1>
+<p>Both React and Vue have similar reactivity mechanisms. Reactivity was one of the
+    best things about React, so it’s great that Vue has it too!</p>
+    <p>When you update the state in React or the data in Vue, or when a prop or one of any
+        of the things the library is watching changes, everything that depends on that value is updated. For example, if you have a state that is passed into a component as a prop
+        and displayed in the DOM, when the state changes, the prop will be updated, and the
+        inner component will know that the prop has changed and update the value in the
+        DOM.</p>
+<p>
+    Let’s build a simple component that simply counts up from 0 after it is mounted and
+displays the count to the user.
+</p>
+<p>Here it is in React:</p>
+<h3>
+    <pre translate="no">
+        class TickTock extends React.Component {
+            constructor(props) {
+            super(props);
+            this.state = {
+            number: 0,
+            };
+            },
+            componentDidMount() {
+            this.setInterval(() => {
+            this.setState({
+            number: this.state.number + 1
+            });
+            }, 1000);
+            },
+            componentWillUnmount() {
+            clearInterval(this.counterInterval);
+            },
+            render() {
+            return (
+            &lt;p&gt;{this.state.number} seconds have passed&lt;/p&gt;
+            );
+            }
+    </pre>
+</h3>
+<p>
+    Here it is in Vue:
+</p>
+<h3>
+    <pre translate="no">
+        const TickTock = {
+            template: '&lt;p&gt;{{ number }} seconds have passed&lt;/p&gt;',
+            data: () => ({
+            number: 0,
+            counterInterval: undefined,
+            }),
+            mounted() {
+            this.counterInterval = setInterval(() => {
+            this.number++;
+            }, 1000);
+            },
+            destroyed() {
+            clearInterval(this.counterInterval);
+            }
+           };
+    </pre>
+</h3>
+<p>
+    With both examples, we’ve added some logic to clear the interval when the component is destroyed. This is to prevent memory leaks.
+</p>
+<p>This brings us nicely onto our next topic: life-cycle hooks.</p>
+<h3 translate="no">Life-Cycle Hooks</h3>
+<p>
+    The way components are added and removed from the DOM are similar in both
+libraries, and there are methods you can add to your components in both libraries to
+run code at various points throughout the life cycle of a component.
+</p>
+<h4 translate="no">Creating</h4>
+<p>A component is created and then added to the DOM. In React, you have the following four hooks:</p>
+<p>
+    <span translate="no">constructor()</span> <br>
+Called before the component is mounted
+</p>
+<p>
+    <span translate="no">componentWillMount()</span> <br>
+    Called immediately before the component is mounted
+</p>
+<p>
+    <span translate="no">render()</span> <br>
+        Called as the component is mounted and where you return your JSX
+</p>
+<p>
+    <span translate="no">componentDidMount()</span> <br>
+Called immediately after the component is mounted
+</p>
+<p>In Vue, you again have four hooks, but they do slightly different things:</p>
+<p>
+     <span translate="no">beforeCreate()</span> <br>
+Called before the component is initialized
+</p>
+<p>
+   <span translate="no"> created()</span> <br>
+Called after the component is initialized, but before it is added to the DOM
+</p>
+<p>
+     <span translate="no">beforeMount()</span> <br>
+Called after the element is ready to be added to the DOM
+</p>
+<p>
+     <span translate="no"> mounted()</span> <br>
+Called after the element has been created (but not necessarily added to the DOM
+—use nextTick() for that)
+</p>
+<h4 translate="no">Updating</h4>
+<p>After a component has been created and added to the DOM, the data can change, and
+    when that happens, the component will be updated.</p>
+
+<p>In React, you have the following five functions:</p>
+<p>
+     <span translate="no">componentWillReceiveProps() </span> <br>
+Called before the component props are updated
+</p>
+<p>
+    <span translate="no"> shouldComponentUpdate()</span> <br>
+Called to see whether the component should be updated
+</p>
+<p>
+   <span translate="no">  componentWillUpdate() </span> <br>
+Called before the component is updated
+</p>
+<p>
+    <span translate="no">   render() </span> <br>
+Called to generate the new markup that should be returned by the component
+</p>
+<p>
+     <span translate="no">  componentDidUpdate() </span> <br>
+Called after the component is updated
+</p>
+<p>
+    In Vue, you have only two hooks:
+</p>
+<p>
+     <span translate="no">beforeUpdate() </span> <br>
+Called when the component is about to be updated
+</p>
+<p>
+     <span translate="no"> updated()</span> <br>
+Called after the component is updated
+</p>
+<p>
+    In React, shouldComponentUpdate() is commonly used when using another library
+that manipulates the DOM, which doesn’t work so well with React—it often overwrites those changes unless you tell it not to! It’s also used to optimize component
+rendering. In Vue, this usually isn’t an issue, as it works well with other libraries and
+handles the optimization automatically, but if you want to ensure that Vue never
+updates a component again, even if the data changes, you can add the v-once
+attribute to it to tell Vue to render it only once.
+</p>
+<h1>Setting CSS Classes</h1>
+<p>React has a commonly used library to assist when setting class attributes called classnames. It works like this:</p>
+
+<h3>
+    <pre>
+        &lt;div className={classNames('foo', { bar: isBar })}&gt;...&lt;/div&gt;
+    </pre>
+</h3>
+<p>
+    Vue has something similar, but built in. v-bind:class, shortened to :class, doesn’t
+just support expressions, but allows you to use objects and arrays too:
+</p>
+<h3>
+    <pre>
+        &lt;div :class="['foo', { bar: isBar }]"&gt;...&lt;/div&gt;
+    </pre>
+</h3>
+<h1>Differences</h1>
+<p>In addition to having similarities, React and Vue have differences. I won’t cover all the
+    subtle differences—the syntax differences, the method name differences—I’ll just
+    stick to the fundamentals.</p>
+<h2>Mutation</h2>
+<p>A fundamental difference between the two libraries is that with React, mutating state
+    is heavily discouraged, whereas with Vue, replacing or mutating data is the only way
+    to update it! We also see this with Redux and vuex—with Redux, whenever you want
+    to change the store, you generate a new store, whereas with vuex, you mutate the
+    existing store. We’ll cover Redux and vuex later in this appendix, and for now focus
+    on component state.</p>
+    <p>
+        To update the state of a component in React, you use setState:
+
+    </p>
+    <h3>
+        <pre translate="no">
+            this.setState({
+                user: {
+                ...this.state.user,
+                name: newName
+                }
+               })
+        </pre>
+    </h3>
+    <p>
+        The new state is then merged (using a shallow merging strategy) into the state object.
+With Vue, you modify the data directly:
+    </p>
+    <h3>
+        <pre translate="no">
+            this.user.name = newName;
+        </pre>
+    </h3>
+    <p>
+        This does come with caveats: for example, you have to have already defined the name
+property of the user object, and you can’t modify array items directly, instead having
+to use splice to remove the old item and replace it with the new one. To work
+around this, there’s a Vue.set() method:
+    </p>
+    <h3>
+        <pre translate="no">
+            Vue.set(this.user, 'name', newName);
+        </pre>
+    </h3>
+    <p>
+        Generally, you don’t need to worry about this, but if you’re running into issues with
+stuff not updating, this could be why. The way reactivity works in Vue and a list of the
+caveats can be found in “Reactivity” on page 14.
+    </p>
+<h2>JSX Versus Templates</h2>
+<p>
+    Another fundamental difference between React and Vue is the way you get data to
+display on the page. In React, famously, you use JSX, a syntax invented by Facebook
+to write HTML directly in JavaScript. In Vue, you can use JSX if you choose, but most
+people use templates instead. The templates have an Angular-like syntax, with directives and data binding.
+</p>
+<p>
+    In React, the code to generate an HTML list from an array might look like this:
+</p>
+<h3>
+    <pre translate="no">
+        render() {
+            return (
+            &lt;ul&gt;
+            {this.state.items.map((item) =&gt; (
+            &lt;li className={classNames({ active: item.selected })}&gt;
+            {item.text}
+            &lt;/li&gt;
+            ))}
+            {this.state.items.length ? null : (
+            &lt;li&gt;There are no items&lt;/li&gt;
+            )}
+            &lt;/ul&gt;
+            );
+           }
+    </pre>
+</h3>
+<p>There are quite a few ways that can be rewritten.</p>
+<p>In Vue, the template looks like this:</p>
+<h3>
+    <pre translate="no">
+        &lt;ul&gt;
+            &lt;li v-for="item in items" :class="{ active: item.selected }"&gt;
+            {{ item.text }}
+            &lt;/li&gt;
+            &lt;li v-if="!items.length"&gt;There are no items&lt;/li&gt;
+           &lt;/ul&gt;
+    </pre>
+</h3>
+<p>
+    I prefer the template syntax, even though I very much liked JSX when I wrote React.
+If you’re really attached to JSX, you can use it with Vue too:
+</p>
+<h3>
+    <pre translate="no">
+        render(h) {
+            return (
+            &lt;ul&gt;
+            {this.items.map((item) =&gt; (
+            &lt;li class={{ active: item.selected }}&gt;
+            {item.text}
+            &lt;/li&gt;
+            ))}
+            {this.items.length ? null : (
+            &lt;li&gt;There are no items&lt;/li&gt;
+            )}
+            &lt;/ul&gt;
+            );
+           }
+    </pre>
+</h3>
+<p>Refer to Chapter 4 to see how you can set this up in your application.</p>
+<h1>CSS Modules</h1>
+<p>The final major difference is the way CSS is written in Vue. React doesn’t have a builtin way to do this, but it’s extremely common to use CSS modules.</p>
+<p>In React, using CSS modules looks like this:</p>
+<h3>
+    <pre translate="no">
+        .user {
+            border: 2px #ccc solid;
+            background-color: white;
+           }
+           .name {
+            font-size: 24px;
+           }
+           .bio {
+            font-size: 16px;
+            color: #333;
+           }
+    </pre>
+</h3>
+<p>And the JSX:</p>
+<h3>
+    <pre translate="no">
+        import styles from './styles.css';
+// ...
+render() {
+ return (
+ &lt;div className={styles.user}&gt;
+ &lt;h2 className={styles.name}&gt;{user.name}&lt;/h2&gt;
+ &lt;p className={styles.bio}&gt;{user.bio}&lt;/p&gt;
+ &lt;/div&gt;
+ );
+}
+    </pre>
+</h3>
+<p>Vue supports CSS modules as well, and without any plug-ins or additional build tool
+    configuration. In Vue, it looks like this (when using single-file components):</p>
+<h3>
+    <pre translate="no">
+        &lt;template&gt;
+            &lt;div :class="$style.user"&gt;
+            &lt;h2 :class="$style.name"&gt;{{ user.name }}&lt;/h2&gt;
+            &lt;p :class="$style.bio"&gt;{{ user.bio }}&lt;/p&gt;
+            &lt;/div&gt;
+           &lt;/template&gt;
+           &lt;style module&gt;
+            .user { ... }
+            .name { ... }
+            .bio { ... }
+           &lt;/style&gt;
+    </pre>
+</h3>
+<p>
+    More commonly, though, you’ll see people using scoped CSS in Vue. Scoped CSS
+works by adding a random data attribute to every element output by that component,
+and then adding it to the end of every CSS selector. Any CSS you write in that
+&lt;style&gt; tag will apply only to the elements produced by that component.
+</p>
+<p>The previous example written using scoped CSS looks like this:</p>
+<h3>
+    <pre translate="no">
+        &lt;template&gt;
+            &lt;div class="user"&gt;
+            &lt;h2 class="name"&gt;{{ user.name }}&lt;/h2&gt;
+            &lt;p class="bio"&gt;{{ user.bio }}&lt;/p&gt;
+            &lt;/div&gt;
+           &lt;/template&gt;
+           &lt;style scoped&gt;
+            .user { ... }
+            .name { ... }
+            .bio { ... }
+           &lt;/style&gt;
+    </pre>
+</h3>
+<p>The CSS in the style tag, even though we’ve used really generic class names that will
+    probably apply to other elements outside the component too, will apply only to the
+    HTML in the element. I’d still recommend using longer, more descriptive class
+    names, though!</p>
+    <p>Scoped CSS also works well with SCSS or other CSS preprocessors, and nesting.</p>
+<h1>Ecosystem</h1>
+<p>
+    React has a huge ecosystem because of its popularity and widespread use. Vue, as a
+newer and currently less popular library, doesn’t have the ecosystem or community
+that React has yet—although it’s getting better every day, and at this point, growing
+faster than the React ecosystem. <br>
+Unfortunately, the ecosystem for React, especially for mission-critical tasks such as
+routing, can often be quite fragmented. Multiple routing solutions exist for React—
+although react-router seems to be the most—whereas there is only one for Vue, vuerouter. Although Facebook has left the community to develop nearly all of the ecosystem that isn’t React itself, the people behind Vue are also the same people behind vuerouter, vuex, vue-test-utils, vue-cli, and probably other official libraries in the future.
+ <br> In practice, if you are using functionality that is provided by an official Vue plug-in
+(routing, state management, testing) you’ll have a nice experience and won’t have to
+make any choices. If you’re using functionality that isn’t provided by an official plugin (internationalization, HTTP resource management) you’ll probably end up having
+a worse experience than you would with React, which has a more established ecosystem.
+</p>
+<p>For now, let’s look at where the official plug-ins can help us.</p>
+<h2 translate="no">Routing</h2>
+<p>We have a couple of options for handling routing in React, but by far the most widely
+    used option is react-router. This library uses JSX to specify components that will display when the page matches a given route.</p>
+<p>A router powered by react-router might look something like this:</p>
+<h3>
+    <pre translate="no">
+        const app = () => (
+ &lt;Router history={hashHistory}&gt;
+ &lt;Route path="/" component={PageHome} /&gt;
+ &lt;Route path="/user/:userId" component={PageUser} /&gt;
+ &lt;Route path="/settings" component={PageSettings}&gt;
+ &lt;Route path="/profile" component={PageSettingsProfile} /&gt;
+ &lt;Route path="/email" component={PageSettingsEmail} /&gt;
+ &lt;/Route&gt;
+ &lt;/Router&gt;
+);
+    </pre>
+</h3>
+<p>
+    In Vue, an official library handles routing: vue-router. It doesn’t use JSX, instead
+using an object to configure the router. The same router as the preceding one might
+look like this:
+</p>
+<h3>
+    <pre translate="no">
+        const router = new VueRouter({
+            mode: 'history',
+            routes: [
+            {
+            path: '/',
+            component: PageHome
+            },
+            {
+            path: '/user/:userId',
+            component: PageUser
+            },
+            {
+            path: '/settings',
+            component: PageSettings,
+            children: [
+            {
+            path: 'profile',
+            component: PageSettingsProfile
+            },
+            {
+            path: 'email',
+            component: PageSettingsEmail
+            }
+            ]
+            } ]
+        });
+    </pre>
+</h3>
+<p>Both libraries do the same things, just in different ways.</p>
+<h1>State Management</h1>
+<p>The most commonly used state management library in React is called Redux, and the
+    equivalent library in Vue is the official plug-in called vuex. Both of them operate
+    using basically the same methodology, providing a global store that you can store
+    data in and modify throughout your app. If you’re familiar with Redux, you’re familiar with vuex, and vice versa; the only thing that differs between them is the terminology and the mutation differences discussed earlier. <br>
+    With Redux, you have a store that contains state. You can either access the state
+    directly, or using react-redux you can use the mapStateToProps function in the
+    middleware to make it accessible as a prop. To update the state, you use a reducer to
+    generate a new state. Reducers are synchronous, and to modify asynchronously,
+    either you make the change in a component, or you can use a plug-in such as reduxthunk to add asynchronous actions to your app. <br>
+    With vuex, you have a store that contains state. You can access the state directly, but
+    you cannot mutate it directly: to mutate it, you use mutations, special methods within
+    the store that are used to change the data. Mutations are synchronous only, and so to
+    modify something asynchronously (for example, to update something from an API
+    directly in the store), you can use actions. You can do all of that without using any
+    additional plug-ins—just Vue and vuex.
+    Let’s make a store that stores a list of users. <br>
+    With Redux:</p>
+    <h3>
+        <pre translate="no">
+            import { createStore, applyMiddleware } from 'redux';
+import thunk from 'redux-thunk';
+const initialState = {
+ users: undefined
+};
+const reducer = (state = initialState, action) => {
+ switch (action.type) {
+ case 'SET_USERS':
+ return Object.assign({}, state, {
+ users: action.payload
+ });
+ default: return state;
+ }
+};
+const store = createStore(reducer, applyMiddleware(thunk))
+        </pre>
+    </h3>
+<p>And in a separate actions file:</p>
+<h3>
+    <pre translate="no">
+        export function updateUsers() {
+            return (dispatch, getState) => {
+            return fetch('/api/users')
+            .then((res) => res.json())
+            .then((users) => dispatch({ type: 'SET_USERS', payload: users }));
+            };
+           };
+    </pre>
+</h3>
+<p>And with vuex:</p>
+<h3>
+    <pre translate="no">
+        const store = new Vuex.Store({
+            state: {
+            users: undefined
+            },
+            mutations: {
+            setUsers(state, users) {
+            state.users = users;
+            }
+            },
+            actions: {
+            updateUsers() {
+            return fetch('/api/users')
+            .then((res) => res.json())
+            .then((users) => this.setUsers(users));
+            }
+            }
+           });
+    </pre>
+</h3>
+<p>
+    The way you use the store in components is quite different in React and in Vue. <br>
+In React, you have to wrap the entire component in the Redux middleware, which
+takes mapStateToProps and mapDispatchToProps arguments and passes the actions
+and state into the component as props.
+</p>
+<p>
+    Here’s how you would update the users and get the data from the store in React:
+</p>
+<h3>
+    <pre translate="no">
+        import { connect } from 'react-redux';
+import { updateUsers } from './actions';
+class UserList extends React.Component {
+ componentDidMount(state, { updateUsers }) {
+ updateUsers();
+ },
+ render({ users }) {
+ return (
+ ...
+ );
+ }
+}const mapStateToProps = ({ users }) => users;
+const mapDispatchToProps = { updateUsers };
+export default connect(mapStateToProps, mapDispatchToProps)(UserList);
+    </pre>
+</h3>
+<p>The component gets the users when it is mounted, and then when they’ve been
+    loaded, they are available using just users, as the state is mapped to props thanks to
+    the Redux middleware.</p>
+    <p>
+        Vue and vuex are a lot easier to use together because of how nicely the ecosystem
+works together. You don’t need to add anything special to the component; you can
+access the data using this.$store.
+    </p>
+    <p>Here’s the Vue equivalent of the preceding code:</p>
+    <h3>
+        <pre translate="no">
+            const UserList = {
+                template: '...',
+                mounted() {
+                this.$store.dispatch('updateUsers');
+                },
+                computed: {
+                users() {
+                return this.$store.state.users;
+                }
+                }
+               };
+        </pre>
+    </h3>
+    <p>
+        The component gets the users when it is mounted, and then when the users have
+been loaded, they are available using this.users.
+    </p>
+    <p>
+        vuex also provides helper functions to help avoid repetition in your code. For more
+information on vuex, check out Chapter 5.
+    </p>
+    <h1>Unit-Testing Components</h1>
+    <p>A common way of unit testing React components is to use Enzyme. Enzyme is a
+        library published by Airbnb that makes mounting and testing components easy.</p>
+    <p>A test in Enzyme might look like this:</p>
+    <h3>
+        <pre translate="no">
+            import { expect } from 'chai';
+import { shallow } from 'enzyme';
+import UserView from '../components/UserView.js';
+const wrapper = shallow(&lt;UserView /&gt;);
+expect(wrapper.find('p')).to.have.length(1);
+const text = wrapper.find('p').text();
+expect(text).to.equal('User name: Callum Macrae');
+        </pre>
+    </h3>
+    <p>
+        Vue has a similar library called vue-test-utils. Like Enzyme, it provides functionality
+to make mounting components, traversing the DOM, and running tests a lot easier.
+    </p>
+<p>Here’s a similar test, but testing a Vue component using vue-test-utils instead:</p>
+<h3>
+    <pre translate="no">
+        import { expect } from 'chai';
+import { shallow } from 'vue-test-utils';
+import UserView from '../components/UserView.vue';
+const wrapper = shallow(UserView);
+expect(wrapper.contains('p')).toBe(true);
+const text = wrapper.find('p').text();
+expect(text).toBe('User name: Callum Macrae');
+    </pre>
+</h3>
+<p>
+    As you can see, they have similar syntax, so switching from one to the other shouldn’t
+prove to be too much of a challenge.
+</p>
+</body>
+</html>

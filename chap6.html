@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Document</title>
+</head>
+<body>
+   <a href="chap5.html">chap5</a> 
+   <h1> chapitre 6:State Management with Vuex</h1>
+   <p>
+    Until this point in the book, all data has been stored in our components. We hit an
+    API, and we store the returned data on the data object. We bind a form to an object,
+    and we store that object on the data object. All communication between components
+    has been done using events (to go from child to parent) and props (to go from parent
+    to child). This is good for simple cases, but in more complicated applications, it won’t
+    suffice.
+   </p>
+   <p>
+    Let’s take a social network app—specifically, messages. You want an icon in the top
+    navigation to display the number of messages you have, and then you want a messages pop-up at the bottom of the page that will also tell you the number of messages
+    you have. Both components are nowhere near each other on the page, so linking
+    them using events and props would be a nightmare: components that are completely
+    unrelated to notifications will have to be aware of the events to pass them through.
+    The alternative is, instead of linking them together to share data, you could make separate API requests from each component. That would be even worse! Each component would update at different times, meaning they could be displaying different
+    things, and the page would be making more API requests than it needed to.
+   </p>
+   <p>
+    vuex is a library that helps developers manage their application’s state in Vue applications. It provides one centralized store that you can use throughout your app to store
+    and work with global state, and gives you the ability to validate data going in to
+    ensure that the data coming out again is predictable and correct.
+   </p>
+   <h1>Installation</h1>
+   <p>You can use vuex via a CDN. Just add the following:</p>
+   <h3>
+       <pre>
+        &lt;script src="https://unpkg.com/vuex"&gt;&lt;/script&gt;
+       </pre>
+   </h3>
+   <p>
+    Alternatively, if you’re using npm, you can install vuex by using npm install --save
+    vuex. If you’re using a bundler such as webpack, then just as with vue-router, you
+    have to call Vue.use():
+   </p>
+   <h3>
+       <pre translate="no">
+        import Vue from 'vue';
+        import Vuex from 'vuex';
+        Vue.use(Vuex);
+       </pre>
+   </h3>
+
+   <p>Then you need to set up your store. Let’s create the following file and save it as store/
+    index.js:</p>
+    <h3>
+        <pre translate="no">
+            import Vuex from 'vuex';
+export default new Vuex.Store({
+ state: {}
+});
+        </pre>
+    </h3>
+<p>
+    For now, that’s just an empty store: we’ll add to it throughout the chapter.
+</p>
+<p>
+    Then, import it in your main app file and add it as a property when creating the Vue
+instance:
+</p>
+<h3>
+    <pre translate="no">
+        import Vue from 'vue';
+import store from './store';
+new Vue({
+ el: '#app',
+ store,
+ components: {
+ App
+ }
+});
+    </pre>
+</h3>
+<p>
+    You’ve now added the store to your app and you can access it using this.$store.
+Let’s look at the concepts of vuex and then we’ll look at what you can do with this.
+$store.
+</p>
+<h1>Concept</h1>
+<p>
+    As mentioned in the introduction to this chapter, vuex can be required when complex
+applications require more than one component to share state.
+</p>
+<p>
+    Let’s take a simple component written without vuex that displays the number of messages a user has on the page:
+</p>
+<h3>
+    <pre translate="no">
+        const NotificationCount = {
+            template: `&lt;p&gt;Messages: {{ messageCount }}&lt;/p&gt;`,
+            data: () => ({
+            messageCount: 'loading'
+            }),
+            mounted() {
+                const ws = new WebSocket('/api/messages');
+                ws.addEventListener('message', (e) => {
+                const data = JSON.parse(e.data);
+                this.messageCount = data.messages.length;
+                });
+                }
+               };
+    </pre>
+</h3>
+<p>
+    It’s pretty simple. It opens a websocket to /api/messages, and then when the server
+sends data to the client—in this case, when the socket is opened (initial message
+count) and when the count is updated (on new messages)—the messages sent over
+the socket are counted and displayed on the page.
+</p>
+<i>
+    In practice, this code would be much more complicated: there’s no
+authentication on the websocket in this example, and it is always
+assumed that the response over the websocket is valid JSON with a
+messages property that is an array, when realistically it probably
+wouldn’t be. For this example, this simplistic code will do the job.
+</i>
+<p>
+    We run into problems when we want to use more than one of the Notification
+Count components on the same page. As each component opens a websocket, it
+opens unnecessary duplicate connections, and because of network latency, the components might update at slightly different times. To fix this, we can move the websocket logic into vuex.
+</p>
+<p>
+    Let’s dive right in with an example. Our component will become this:
+</p>
+<h3>
+    <pre translate="no">
+        const NotificationCount = {
+            template: `&lt;p&gt;Messages: {{ messageCount }}&lt;/p&gt;`,
+            computed: {
+            messageCount() {
+            return this.$store.state.messages.length;
+            }
+            }
+            mounted() {
+            this.$store.dispatch('getMessages');
+            }
+    </pre>
+</h3>
+<p>And the following will become our vuex store:</p>
+<h3>
+    <pre translate="no">
+        let ws;
+export default new Vuex.Store({
+ state: {
+ messages: [],
+ },
+ mutations: {setMessages(state, messages) {
+    state.messages = messages;
+    }
+    },
+    actions: {
+    getMessages({ commit }) {
+    if (ws) {
+    return;
+    }
+    ws = new WebSocket('/api/messages');
+    ws.addEventListener('message', (e) => {
+    const data = JSON.parse(e.data);
+    commit('setMessages', data.messages);
+    });
+    }
+    }
+   });
+    </pre>
+</h3>
+<p>
+    Now, every notification count component that is mounted will trigger getMessages,
+but the action checks whether the websocket exists and opens a connection only if
+there isn’t one already open. Then it listens to the socket, committing changes to the
+state, which will then be updated in the notification count component as the store is
+reactive—just like most other things in Vue. When the socket sends down something
+new, the global store will be updated, and every component on the page will be updated at the same time.
+</p>
+<p>
+    Throughout the rest of the chapter, I’ll introduce the individual concepts you saw in
+that example—state, mutations, and actions—and explain a way we can structure our
+vuex modules in large applications to avoid having one large, messy file.
+</p>
+<h1>State and State Helpers</h1>
+<p>
+    First, let’s look at state. State indicates how data is stored in our vuex store. It’s like one
+big object that we can access from anywhere in our application—it’s the single source
+of truth.
+</p>
+<p>
+    Let’s take a simple store that contains only a number:
+</p>
+<h3>
+    <pre translate="no">
+        import Vuex from 'vuex';
+export default new Vuex.Store({
+ state: {
+ messageCount: 10
+ }
+});
+    </pre>
+</h3>
+<p>
+    Now, in our application, we can access the messageCount property of the state object
+by accessing this.$store.state.messageCount. This is a bit verbose, so generally it’s
+better to put it in a computed property, like so:
+</p>
+
+<h3>
+    <pre>
+        const NotificationCount = {
+            template: `&lt;p&gt;Messages: {{ messageCount }}&lt;/p&gt;`,
+            computed: {
+            messageCount() {
+            return this.$store.state.messageCount;
+            }
+            }
+           };
+    </pre>
+</h3>
+<p>
+    Now, the component will display “Messages: 10”.
+</p>
+<h2>State Helpers</h2>
+<p>
+    Accessing the store in a computed property is fine when you’re referring to only a
+couple of properties of the store, but it can get repetitive if you’re referring to lots of
+them. For this reason, vuex provides a mapState helper that returns an object of functions that can be used as computed properties.
+</p>
+<p>
+    Generally, all you need to provide is an array of strings:
+</p>
+<h3>
+    <pre translate="no">
+        import { mapState } from 'vuex';
+const NotificationCount = {
+ template: `&lt;p&gt;Messages: {{ messageCount }}&lt;/p&gt;`,
+ computed: mapState(['messageCount'])
+};
+    </pre>
+</h3>
+<p>
+    That does the same as the code example before, but is much shorter. If we have more
+properties we want to get from the vuex store, we can simply add their names to the
+mapState call.
+</p>
+<p>
+    The preceding mapState call is short for the following:
+</p>
+<h3>
+    <pre translate="no">
+        computed: mapState({
+            messageCount: (state) => state.messageCount
+           })
+    </pre>
+</h3>
+<p>
+    The mapState function takes an object for which every key corresponds to a computed property. If it is given a function, the function is called with state as the first
+argument, and you can retrieve the value you want from it. You can also give it a
+string if you’re just getting a property from the state:
+</p>
+<h3>
+    <pre translate="no">
+        computed: mapState({
+            messageCount: 'messageCount'
+           })
+    </pre>
+</h3>
+<p>
+    You’ve just looked at three ways of getting the exact same value from the store and
+making it available as the exact same computed property; you might be wondering
+about the difference between them.
+</p>
+<p>
+    If every one of your mappings is a simple mapping from the same computed property
+name to the property name in vuex—for example, messageCount corresponds to
+state.messageCount—you can use the array syntax demonstrated in the first example.
+</p>
+<p>
+    If, however, any of the properties are going to be mapped to different names or need
+processing, you need to use the full object syntax. Then I’d recommend using the
+string syntax wherever possible—it’s a lot easier to read—and the function syntax
+whenever you need to do processing. For example, if we have a messages property of
+the state that stores an array of messages and we want the length as messageCount, we
+can do the following:
+</p>
+<h3>
+    <pre translate="no">
+        computed: mapState({
+            messageCount: (state) => state.messages.length,
+            somethingElse: 'somethingElse'
+           })
+    </pre>
+</h3>
+<p>
+    It is, of course, up to you which style you use.
+</p>
+<p>
+    If using the full function syntax, not ES6 fat-arrow functions, you can also access the
+component as this to combine both component state and vuex state:
+</p>
+<h3>
+    <pre translate="no">
+        computed: mapState({
+            messageCount(state) {
+            return state.messages.length + this.pendingMessages.length;
+            }
+           })
+    </pre>
+</h3>
+<b>
+    In the previous example, we mixed vuex state and local state. A
+common mistake people make when using vuex is moving all their
+application state into vuex, which isn’t something you want to do.
+It’s fine to still use local state and best to combine the two: application state shared between multiple components into vuex, and simple state that’s used in only one component in local state.
+</b>
+<p>
+    Finally, let’s look at a way to combine mapState with your existing computed properties. As it returns an object, if you have any existing computed properties, you need a
+way to merge the two objects together. Luckily, there’s a stage 3 ECMAScript proposal
+(meaning that it’s a candidate for inclusion into JavaScript) which can help us here:
+the object spread operator. It’s like the array spread operator in ECMAScript 2015,
+but for objects:
+</p>
+<h3>
+    <pre translate="no">
+        computed: {
+            doubleFoo() {return this.foo * 2;
+            },
+            ...mapState({
+            messageCount: (state) => state.messages.length,
+            somethingElse: 'somethingElse'
+            })
+           }
+    </pre>
+</h3>
+<p>
+    The resulting object for this example is as follows:
+</p>
+<h3>
+    <pre translate="no">
+        computed: {
+            doubleFoo() {
+            return this.foo * 2;
+            },
+            messageCount() {
+            return this.$store.state.messages.length,
+            },
+            somethingElse() {
+            return this.$store.state.somethingElse;
+            }
+           }
+    </pre>
+</h3>
+<p>
+    Note that if you use the object spread operator, you’ll want to use a transpilation tool
+such as Babel to ensure maximum browser support.
+</p>
+<h1 translate="no">Getters</h1>
+<p>
+    Sometimes you might find that you’re using the same data in multiple components
+and doing the same processing in all of them, resulting in duplicate code. For example, maybe we’re finding ourselves calculating the name of the people we haven’t read
+messages from repeatedly:
+</p>
+<h3>
+    <pre translate="no">
+        computed: mapState({
+            unreadFrom: (state) => state
+            .filter((message) => !message.read)
+            .map((message) => message.user.name)
+           })
+    </pre>
+</h3>
+<p>
+    That might be fine if we’re using the computed property only once, but if we’re using
+it in multiple components, that’s a lot of repetition. If the API schema changes
+(maybe message.user.name is changed to message.sender.full_name), then we’ll
+have to update our code in a lot of places.
+</p>
+<p>
+    Luckily, vuex provides us with getters, which allow us to move the code we’re commonly reusing into our vuex store to avoid duplicating it elsewhere.
+</p>
+<p>
+    Let’s look at how we might move the code from the preceding example into our vuex
+store:
+</p>
+<h3>
+    <pre translate="no">
+        import Vuex from 'vuex';
+        export default new Vuex.Store({
+            state: {
+            messages: [...]
+            },
+            getters: {
+            unreadFrom: (state) => state.messages
+            .filter((message) => !message.read)
+            .map((message) => message.user.name)
+            }
+           });
+    </pre>
+</h3>
+<p>
+    Now the unreadFrom getter can be accessed at store.getters.unreadFrom:
+</p>
+<h3>
+    <pre translate="no">
+        computed: {
+            unreadFrom() {
+            return this.$store.getters.unreadFrom;
+            }
+           }
+    </pre>
+</h3>
+<p>
+    Neat. Getters can also access other getters by using their second argument. For example, let’s split the previous getter into two smaller getters:
+</p>
+<h3>
+    <pre translate="no">
+        import Vuex from 'vuex';
+export default new Vuex.Store({
+ state: {
+ messages: [...]
+ },
+ getters: {
+ unread: (state) => state.filter((message) => !message.read),
+ unreadFrom: (state, getters) => getters.unread
+ .map((message) => message.user.name)
+ }
+});
+    </pre>
+</h3>
+<h1>Getter Helpers</h1>
+<p>
+    Just as with state, there are helpers for getter methods instead of typing this.
+$store.getters every time. It works similarly to mapState, but doesn’t support the
+function syntax.
+</p>
+<p>
+    There’s an array syntax
+</p>
+<h3>
+    <pre translate="no">
+        computed: mapGetters(['unread', 'unreadFrom'])
+    </pre>
+</h3>
+<p>
+    that’s the equivalent of the following:
+</p>
+<h3>
+    <pre translate="no">
+        computed: {
+            unread() {
+            return this.$store.getters.unread;
+            },
+            unreadFrom() {
+            return this.$store.getters.unreadFrom; },
+        }
+    </pre>
+</h3>
+<p>
+    And there’s an object syntax
+</p>
+<h3>
+    <pre translate="no">
+        computed: mapGetters({
+            unreadMessages: 'unread',
+            unreadMessagesFrom: 'unreadFrom'
+           })
+    </pre>
+</h3>
+<p>
+    that is the equivalent of the following:
+</p>
+<h3>
+    <pre translate="no">
+        computed: {
+            unreadMessages() {
+            return this.$store.getters.unread;
+            },
+            unreadMessagesFrom() {
+            return this.$store.getters.unreadFrom;
+            },
+           }
+    </pre>
+</h3>
+<h1>Mutations</h1>
+<p>
+    So far you’ve looked only at how to get data out of the store, not at how to modify the
+data. You can’t just modify the values in the state object directly; you have to use a
+mutation to do it
+</p>
+<p>
+    A mutation is a function that synchronously modifies the state and is invoked by calling store.commit() with the name of the mutation.
+</p>
+<p>
+    Now, let’s create a mutation that allows us to add a message to the end of the array of
+messages:
+</p>
+<h3>
+    <pre translate="no">
+        import Vuex from 'vuex';
+export default new Vuex.Store({
+ state: {
+ messages: []
+ },
+ mutations: {
+ addMessage(state, newMessage) {
+ state.messages.push(newMessage);
+ }
+ }
+});
+    </pre>
+</h3>
+<p>
+    Then to add a message, we can call store.commit() in our component:
+</p>
+<h3>
+    <pre translate="no">
+        const SendMessage = {
+            template: '&lt;form @submit="handleSubmit"&gt;...&lt;/form&gt;',
+            data: () => ({
+            formData: { ... }
+            }),
+            methods: {
+                handleSubmit() {
+                this.$store.commit('addMessage', this.formData);
+                }
+                }
+               };
+    </pre>
+</h3>
+<p>The first argument of the commit method is the name of the mutation, and the second
+    is an optional argument known as the payload.</p>
+    <p>
+        The method also supports an object syntax:
+    </p>
+<h3>
+    <pre translate="no">
+        this.$store.commit({
+            type: 'addMessage',
+            newMessage: this.formData
+           });
+    </pre>
+</h3>
+<p>
+    The entire object will be the payload, so the mutation would have to change to push
+payload.newMessage instead of the entire payload.
+</p>
+<h1>
+    Mutation Helpers
+</h1>
+<p>
+    Just as with state and getters, there’s a mapMutations method for mutations too. It has
+the exact same syntax as the mapGetters helper.
+</p>
+<p>
+    There’s an array syntax
+</p>
+<h3>
+    <pre translate="no">
+        methods: mapMutations(['addMessage'])
+    </pre>
+</h3>
+<p>
+    that’s the equivalent of the following:
+</p>
+<h3>
+    <pre translate="no">
+        methods: {
+            addMessage(payload) {
+            return this.$store.commit('addMessage', payload);
+            },
+           }
+    </pre>
+</h3>
+<p>
+    As you can see, it also supports payloads (again, optionally).
+</p>
+<p>Plus, there’s an object syntax if you want the names of the methods to be different
+    from the names of the mutations:</p>
+<h3>
+    <pre translate="no">
+        methods: mapMutations({
+            addNewMessage: 'addMessage'
+           })
+    </pre>
+</h3>
+<p>
+    That is the equivalent of the following:
+</p>
+<h3>
+    <pre translate="no">
+        methods: {
+            addNewMessage(payload) {
+            return this.$store.commit('addMessage', payload);
+            },
+           }
+    </pre>
+</h3>
+<p>
+    As I mentioned before, mutations are only for performing synchronous changes to the
+state object. If you want to make an asynchronous change, you need to use an action.
+</p>
+<h1>Actions</h1>
+<p>
+    Finally, we have actions. You can make only synchronous changes with mutations, so
+actions are used for making asynchronous changes
+</p>
+<p>
+    Let’s make an action that builds on the state and mutations you’ve seen previously.
+The action will call the server by using the fetch API, check whether there are new
+messages, and push any new messages to the end of the messages array:
+</p>
+<h3>
+    <pre translate="no">
+        import Vuex from 'vuex';
+export default new Vuex.Store({
+ state: {
+ messages: []
+ },
+ mutations: {
+ addMessage(state, newMessage) {
+ state.messages.push(newMessage);
+ },
+ addMessages(state, newMessages) {
+ state.messages.push(...newMessages);
+ }
+ },
+ actions: {
+ getMessages(context) {
+ fetch('/api/new-messages')
+ .then((res) => res.json())
+ .then((data) => {
+ if (data.messages.length) {
+ context.commit('addMessages', data.messages);
+ }
+ });
+ }
+ }
+});
+    </pre>
+</h3>
+<p>
+    There are two new things in this code example: first an addMessages mutation, which
+is similar to the addMessage mutation but can add more than one message at once,
+and the getMessages action, which checks the server for new messages, and if there
+are any, calls the addMessages mutation with those new messages.
+</p>
+<p>
+    Then, to call getMessages in our component, we use the store.dispatch() method.
+Let’s add a little link to the NotificationCount component to update the message
+count:
+</p>
+<h3>
+    <pre translate="no">
+        import { mapState } from 'vuex';
+const NotificationCount = {
+ template: `&lt;p&gt;
+ Messages: {{ messages.length }}
+ &lt;a @click.prevent="handleUpdate"&gt;(update)&lt;/a&gt;
+ &lt;/p&gt;`,
+ computed: mapState(['messages']),
+ methods: {
+ handleUpdate() {
+ this.$store.dispatch('getMessages');
+ }
+ }
+};
+    </pre>
+</h3>
+<p>
+    Now, clicking the link results in the following process:
+</p>
+<p>
+    1. When the link is clicked, the handleUpdate method is fired. <br>
+2. The getMessages action is dispatched. <br>
+3. A request is sent to /api/new-messages. <br>
+4. When that request returns, if it has new messages, the addMessages mutation will
+be called with the new messages as a payload. <br>
+5. The addMessages mutation pushes the new messages to the messages property of
+the state. <br>
+6. Because the state is reactive, the messages computed property updates, and the
+text display on the page changes.
+</p>
+<p>
+    dispatch takes the same syntax as commit: it can either have the name of the action as
+the first argument and the payload as the second argument, or it can take an object
+with a type property, which will also be used as the payload.
+</p>
+<h1>Action Helpers</h1>
+<p>As with everything else covered so far in this chapter, actions have a mapActions
+    helper that you can use to map methods to actions:</p>
+    <h3>
+        <pre translate="no">
+            methods: {
+                // Maps this.getMessage() to this.$store.dispatch('getMessage')
+                ...mapActions(['getMessage'])
+                // Maps this.update() to this.$store.dispatch('getMessages')
+                ...mapActions({
+                update: 'getMessages'
+                })
+               }
+        </pre>
+    </h3>
+    <h1>Destructuring</h1>
+<p>
+    It’s fairly standard in actions to use destructuring in the arguments instead of referring to context, like so:
+</p>
+<h3>
+    <pre translate="no">
+        actions: {
+            getMessages({ commit }) {
+            // Do some stuff, then…
+            commit('addMessages', data.messages);
+            }
+           }
+    </pre>
+</h3>
+<p>
+    context equals the vuex store—or, as you’re about to explore in the next section—the
+current vuex module. You can access the state through it (it’s just the state property),
+but you can’t mutate it—you need to use mutations for that.
+</p>
+<h1 translate="no">
+    Promises and Actions
+</h1>
+<p>
+    Actions are asynchronous, so how do we know when they’re finished? We could
+watch the computed property for changes, but that isn’t ideal.
+</p>
+<p>Instead, we can return a promise inside the action. Then, the call to dispatch will
+    also return a promise, which we can use to run code when the action has finished
+    running.</p>
+<p>
+    Let’s change our previous getMessages action so that it returns a promise:
+</p>
+<h3>
+    <pre translate="no">
+        actions: {
+            getMessages({ commit }) {
+            return fetch('/api/new-messages')
+            .then((res) => res.json())
+            .then((data) => {
+            if (data.messages.length) {
+            commit('addMessages', data.messages);
+            }
+            });
+            }
+           }
+    </pre>
+</h3>
+<p>
+    It’s a small change—just a return keyword before the fetch call. Now, let’s change
+our NotificationCount component to display a loading sign when the message
+count is being updated. To do that, we’ll need to add an updating property to the
+local state of the component that will equal true or false:
+</p>
+<h3>
+    <pre translate="no">
+        import { mapState } from 'vuex';
+const NotificationCount = {
+ template: `&lt;p&gt;
+ Messages: {{ messages.length }}
+ &lt;span v-if="loading"&gt;(updating…)&lt;/span&gt;
+ &lt;a v-else @click.prevent="handleUpdate"&gt;(update)&lt;/a&gt;
+ &lt;/p&gt;`,
+ data: () =&gt; ({
+ updating: false,
+ }),
+ computed: mapState(['messages']),
+ methods: {
+ handleUpdate() {
+ this.updating = true;
+ this.$store.dispatch('getMessages')
+ .then(() =&gt; {
+ this.updating = false;
+ });
+ }
+ }
+};
+    </pre>
+</h3>
+<p>
+    Now, when the component is updating, the component displays (updating…) instead
+of the link to update the message count.
+</p>
+<h1>Modules</h1>
+<p>Now that you know how to store and manipulate data in a vuex store, let’s talk a bit
+    about how to structure your store.</p>
+    <p>
+        In smaller apps, the way you’ve seen so far—keeping all of your state, getters, mutations, and actions in one file—works great. In larger applications, however, that can
+get a bit messy, so vuex allows you to split your store into modules.
+    </p>
+    <p>
+        Each module is just an object, and has its own state, getters, mutations, and actions,
+and is then added to the store by using the modules property. Let’s take our previous
+store and split out the messages logic (so, all of it) into a module:
+    </p>
+    <h3>
+        <pre translate="no">
+            import Vuex from 'vuex';
+const messages = {
+ state: {
+ messages: []
+ },
+ mutations: {
+ addMessage(state, newMessage) {
+ state.messages.push(newMessage);
+ },
+ addMessages(state, newMessages) {
+ state.messages.push(...newMessages);
+ }
+ },
+ actions: {
+ return getMessages({ commit }) {
+ fetch('/api/new-messages')
+ .then((res) => res.json())
+ .then((data) => {
+    if (data.messages.length) {
+    commit('addMessages', data.messages);
+    }
+    });
+    }
+    }
+   };
+   export default new Vuex.Store({
+    modules: {
+    messages,
+    }
+   });
+        </pre>
+    </h3>
+<p>
+    After this modification, a couple of subtle changes occur in the way it works now. <br>
+The first one is that state in the mutation and getters now refers to the module state
+instead of the root state (the state of the main store), and context in the actions refers
+to the module instead of the store. Everything you do in that module affects only that
+module, and not any other modules. In getters, you can access the root scope by
+using the third rootScope property, and in actions you can access the root scope by
+using the rootScope property of the scope object. <br>
+The second change is that you now need to specify the module when retrieving data
+from the store. You now need to access state.messages.messages (instead of
+state.messages), where the first messages is the name of the namespace, and the
+second is the name of the property in the state. <br>
+We don’t need to worry about the first change in this case—everything still works as
+expected—but the second change requires us to make a change to the mapState call
+in the NotificationCount component. We can just add the name of the module as
+the first argument:
+</p>
+<h3>
+    <pre translate="no">
+        computed: mapState('messages', ['messages'])
+    </pre>
+</h3>
+<p>
+    This does mean that if you’re getting state from more than one module, you’ll have to
+call mapState multiple times, but with the object spread operator, that’s not a big
+issue.
+</p>
+<h1>
+    File Structure
+</h1>
+<p>
+    Generally, I like to split each module into its own file. This makes the code a bit
+neater and more organized, and also means that the ES6 export syntax can be used to
+make the module itself really clean. Let’s move the messages code into its own file,
+saved in store/modules/messages.js:
+</p>
+<h3>
+    <pre translate="no">
+        export const state = {
+            messages: []};
+            export const mutations = {
+             addMessage(state, newMessage) {
+             state.messages.push(newMessage);
+             },
+             addMessages(state, newMessages) {
+             state.messages.push(...newMessages);
+             }
+            };
+            export const actions = {
+             return getMessages({ commit }) {
+             fetch('/api/new-messages')
+             .then((res) => res.json())
+             .then((data) => {
+             if (data.messages.length) {
+             commit('addMessages', data.messages);
+             }
+             });
+             }
+            };
+    </pre>
+</h3>
+<p>
+    You can then import it in store/index.js as follows:
+</p>
+<h3>
+    <pre translate="no">
+        import Vuex from 'vuex';
+import * as messages from './modules/messages';
+export default new Vuex.Store({
+ modules: {
+ messages,
+ }
+});
+    </pre>
+</h3>
+<p>
+    You can, of course, keep the module as one object and a default export (that’s how it is
+in the official documentation); I just find it a bit nicer this way.
+</p>
+<h1>Namespaced Modules</h1>
+<p>
+    By default, only the state of a vuex module is namespaced. Getters, mutations, and
+actions are still called in exactly the same way, and if an action is dispatched that
+exists in multiple modules, it’s run on all the modules it’s found on. This can be useful
+sometimes, but it could potentially be an accident. It’s possible to namespace the
+entire module to prevent this from happening.
+</p>
+<p>
+    To tell vuex to namespace the module, add a namespaced: true property to the
+object—or in the case of our previous example in its own file, add the following:
+</p>
+<h3>
+    <pre translate="no">
+        export const namespaced = true;
+    </pre>
+</h3>
+<p>
+    Now to access getters, specify the namespace name in the string before their name:
+</p>
+<h3>
+    <pre translate="no">
+        computed: {
+            unreadFrom() {
+            return this.$store.getters['messages/unreadFrom'];
+            }
+           }
+    </pre>
+</h3>
+<p>
+    To trigger mutations and dispatch actions, do the same again—specify the namespace
+name in the string before their name:
+</p>
+<h3>
+    <pre translate="no">
+        store.commit('messages/addMessage', newMessage);
+store.dispatch('messages/getMessages');
+    </pre>
+</h3>
+<p>
+    Just as with mapState, the other three helpers—mapGetters, mapMutations, and
+mapActions—accept the name of the module as the first argument.
+</p>
+<p>
+    Let’s take a look at what namespacing the module does to our NotificationCount
+component:
+</p>
+<h3>
+    <pre translate="no">
+        import { mapState } from 'vuex';
+const NotificationCount = {
+ template: `&lt;p&gt;
+ Messages: {{ messages.length }}
+ &lt;span v-if="loading"&gt;(updating…)&lt;/span&gt;
+ &lt;a v-else @click.prevent="handleUpdate"&gt;(update)&lt;/a&gt;
+ &lt;/p&gt;`,
+ data: () =&gt; ({
+ updating: false,
+ }),
+ computed: mapState('messages', ['messages']),
+ methods: {
+ handleUpdate() {
+ this.updating = true;
+ this.$store.dispatch('messages/getMessages')
+ .then(() =&gt; {
+ this.updating = false;
+ });
+ }
+ }
+};
+    </pre>
+</h3>
+<p>
+    Nothing huge has changed, but it’s now clear that the module is namespaced.
+</p>
+
+<h1>
+    Summary
+</h1>
+<p>
+    In this chapter, you looked at using vuex to manage complicated application state and
+the various concepts of vuex:
+</p>
+<p>
+    • The vuex store is where everything—state, getters, mutations, and actions—are
+stored and accessed through. <br>
+• State is the object where all your data is stored. <br>
+• Getters allow you to store common logic used to retrieve data from the store. <br>
+• Mutations are used to synchronously change data in the store. <br>
+• Actions are used to asynchronously change data in the store.
+</p>
+<p>
+    State, getters, mutations, and actions also have helpers to help you add them to your
+components, named mapState, mapGetters, mapMutations, and mapActions, respectively.
+</p>
+<p>
+    Finally, you also looked at using modules to divide your vuex store into logical
+chunks.
+</p>
+<a href="chap7.html">Testing Vue Components</a>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

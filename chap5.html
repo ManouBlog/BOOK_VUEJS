@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Document</title>
+</head>
+<body>
+    <a href="chap4.html">chap 4</a>
+    <h1 translate="no">chapitre5 :Client-Side Routing with vue-router</h1>
+    <p>
+        With the core Vue.js library introduced in the previous chapters, we can display and
+work with data on a page. However, a fully featured website requires more than just
+that. You may have noticed on some websites that you can navigate around the site
+without downloading the new page from the server, or if you’ve used another framework before, you’ve probably already met client-side routing.
+vue-router is a library for Vue that means we can handle the routing of an app in the
+browser instead of on the server as in traditional websites. Routing is the act of taking
+a path (for example, /users/12345/posts) and deciding what should be displayed on
+the page.
+    </p>
+    <h1>Installation</h1>
+    <p>
+        As with Vue itself, there are multiple ways to install vue-router. You can use a CDN
+by adding the following:
+    </p>
+    <h3>
+        <pre translate="no">
+            &lt;script src="https://unpkg.com/vue-router"&gt;&lt;/script&gt;
+        </pre>
+    </h3>
+    <p>
+        Or if you’re using npm, you can install it using npm install --save vue-router.
+Then, if you’re using a bundler such as webpack, you will need to call Vue.use(VueR
+outer) to install vue-router:
+    </p>
+    <h3>
+        <pre translate="no">
+            import Vue from 'vue';
+import VueRouter from 'vue-router';
+Vue.use(VueRouter);
+        </pre>
+    </h3>
+    <p>
+        This step adds components to your app that you will meet in the next few sections.
+    </p>
+<h1>
+    Basic Usage
+</h1>
+<p>
+    To set up the router, you need to give it an array of paths and the corresponding components: when the path is matched, the component will be displayed.
+</p>
+<p>
+    The following creates a simple two-path router:
+</p>
+<h3>
+    <pre translate="no">
+        import PageHome from './components/pages/Home';
+import PageAbout from './components/pages/About';
+const router = new VueRouter({
+ routes: [
+ {
+ path: '/',
+ component: PageHome
+ },
+ {
+ path: '/about',
+ component: PageAbout
+ }
+ ]
+});
+    </pre>
+</h3>
+<p>
+    Now to use that router, we have to do two things. First, we have to pass it in to Vue
+when we initialize our application. Then, to get it to display on the page, we need to
+add a special &lt;router-view /&gt; component.
+</p>
+<p>
+    To pass the router into Vue, you can just pass it in using the router property when
+you initialize Vue:
+</p>
+<h3>
+    <pre translate="no">
+        import router from './router';
+new Vue({
+ el: '#app',
+ router: router
+});
+    </pre>
+</h3>
+<p>
+    Then in your template, put the &lt;router-view /&gt; component wherever you want the
+component returned by the router to display.
+</p>
+<p>
+    See Example 5-1 for a full basic setup that will display different things depending on
+the path requested. <br>
+Example 5-1. Sample code of a router using vue-router
+</p>
+
+<h3>
+    <pre translate="no">
+        &lt;div id="app"&gt;
+            &lt;h1&gt;Site title&lt;/h1&gt;
+            &lt;main&gt;
+            &lt;router-view /&gt;
+            &lt;/main&gt;
+            <p>Page footer</p>
+        &lt;/div&gt;
+        &lt;script&gt;
+         const PageHome = {
+         template: '&lt;p&gt;This is the home page&lt;/p&gt;'
+         };
+         const PageAbout = {
+         template: '&lt;p&gt;This is the about page&lt;/p&gt;'
+         };
+         const router = new VueRouter({
+         routes: [
+         { path: '/', component: PageHome },
+         { path: '/about', component: PageAbout }
+         ]
+         });
+         new Vue({
+         el: '#app',
+         router,
+         });
+        &lt;/script&gt;
+        </pre>
+</h3>
+<p>
+    After setting up the router and adding styling, you will see the following content
+when you access the root path:
+</p>
+<div class="image">
+    <img src="Vue-js-Up-and-Running-Building-Accessible-and-Performant-Web-Apps.png" alt="vuejs">
+</div>
+<p>
+    And you’ll see the following when you access /about:
+</p>
+<div class="image">
+    <img src="Vue-js-Up-and-Running-Building-Accessible-and-Performant-Web-Apps (1).png" alt="vuejs">
+</div>
+<h1 translate="no">
+    HTML5 History Mode
+</h1>
+<p>
+    By default, vue-router uses the URL hash to store the path. To access the /about route
+on &lt;yoursite&gt;.com, you would go to http://&lt;yoursite&gt;.com/#/about. However, nearly
+every browser these days supports the HTML5 history API, which allows developers
+to update the URL without going to a new page.
+</p>
+<p>
+    You can tell vue-router to use the HTML5 history API by changing the router mode to
+history:
+</p>
+<h3>
+    <pre translate="no">
+        const router = new VueRouter({
+            mode: 'history',
+            routes: [
+            { path: '/', component: PageHome },
+            { path: '/about', component: PageAbout }
+            ]
+           });
+    </pre>
+</h3>
+<p>
+    Now, if you go to http://&lt;yoursite&gt;.com/about, you get…a 404 page. In addition to
+        telling the client-side code to look at the full path instead of the hash, you need to tell
+        your server to respond with your HTML page on every request it doesn’t recognize
+        (for example, not when you request a CSS file).
+</p>
+<p>
+    The way you do this varies, depending on what’s powering your server, but it’s generally pretty simple—the vue-router documentation has a section for most popular
+servers.
+</p>
+<i>
+    Many static site hosts have an SPA mode that you can enable to do this. Check that out before worrying about
+    server configuration
+</i>
+<h1 translate="no">
+    Dynamic Routing
+</h1>
+<p>
+    The previous example is great for simple sites, but what if we want to do something
+more complicated, such as match a user ID as part of a path? vue-router supports
+dynamic path matching, meaning that you can specify the path by using a special syntax, and the component will be accessible under all the paths that match that route.
+For example, if we wanted to have our component display when the path is /user/
+1234, where 1234 can be anything, we can specify the following route:
+</p>
+<h3>
+    <pre translate="no">
+        const router = new VueRouter({
+            routes: [
+            {
+            path: '/user/:userId',
+            component: PageUser
+            }
+            ]
+           });
+    </pre>
+</h3>
+<p>
+    Then any path matching /user/:userId will be shown the PageUser component
+</p>
+<i>
+    vue-router uses the path-to-regexp library for this—the same
+library used by Express, Koa (both the official and unofficial routers), and react-router, so if you’ve used any of those before, you will
+recognize this syntax.
+</i>
+<p>
+    Inside the component, you can access the current route by using the this.$route
+property. This object contains useful properties such as the full path currently being
+accessed, the query parameters of the URL (for example, ?lang=en), and most usefully for this example, a params object containing all the parts of the URL that were
+matched dynamically. With this example, if you access /user/1234, the params object
+will equal the following:
+</p>
+<h3>
+    <pre translate="no">
+        {
+            "userId": "1234"
+           }
+    </pre>
+</h3>
+<p>
+    You can then use this data to do whatever you want with. In this case, you might want
+to use it to send off an API request to grab the users, data, and then display it on the
+page.
+</p>
+<i>
+    Although you might expect that userId would be a number, vuerouter has extracted it from a path (which is a string) and has no
+way of knowing that it is supposed to be a number, so userId is in
+fact a string. If you want to use it as a number, you’ll have to convert it yourself by using parseInt, parseFloat, or Number.
+</i>
+<p>
+    Note that the dynamic part of the URL doesn’t have to be at the end of the
+URL: /user/1234/posts is perfectly valid. Also, you can have more than one dynamic
+segment: matching /user/1234/posts/2 against /user/:userId/posts/:pageNumber will
+result in the following params object:
+</p>
+<h3>
+    <pre translate="no">
+        {
+            "userId": "1234",
+            "pageNumber": "2"
+           }
+    </pre>
+</h3>
+<h1 translate="no">Reacting to Route Updates</h1>
+<p>
+    When navigating between /user/1234 and /user/5678, the same component will be
+reused, and so none of the life-cycle hooks covered in Chapter 1 such as mounted will
+be called. Instead, you can use the beforeRouteUpdate guard to run some code when
+the dynamic segment of the URL changes.
+</p>
+<p>
+    Let’s create a PageUser component that calls an API when it is mounted, and calls it
+again when the route changes:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;template&gt;
+            &lt;div v-if="state === 'loading'"&gt;
+            Loading user…
+            &lt;/div&gt;
+            &lt;div&gt;
+            &lt;h1&gt;User: {{ userInfo.name }}&lt;/h1&gt;
+            ... etc ...
+            &lt;/div&gt;
+           &lt;/template&gt;
+           &lt;script&gt;
+            export default {
+            data: () =&gt; ({
+            state: 'loading',
+            userInfo: undefined
+            }),
+            mounted() {
+            this.init();
+            },
+            beforeRouteUpdate(to, from, next) {
+            this.state = 'loading';
+            this.init();
+            next();
+            },
+            methods: {
+            init() {
+            fetch(`/api/user/${this.$route.params.userId}`)
+            .then((res) =&gt; res.json())
+            .then((data) =&gt; {
+            this.userInfo = data;
+            });
+        }
+    }
+    };
+   &lt;/script&gt;
+        </pre>
+</h3>
+<p>
+    The preceding code loads the data for the first user from the API, displays that information, and then if the route changes (say, if the user clicks a link to go from one user
+to another), it makes another call to the API to get the data for the second user.
+</p>
+<p>
+    Note that we’ve moved the logic that we would usually have in mounted into a
+method, which we call both in the mounted hook and the beforeRouteUpdate guard.
+This avoids having duplicate code—we pretty much always want to be doing the same
+thing in both places.
+</p>
+<p>
+    We’ll explore guards further later in this chapter, including why you have to call
+next() at the end of the function.
+</p>
+<i>
+    beforeRouteUpdate was added in Vue 2.2 and so wasn’t available
+before then. Before 2.2, you had to watch the $route object for
+changes:
+</i>
+<h3>
+    <pre translate="no">
+        const PageUser = {
+            template: '&lt;div&gt;...user page...&lt;/div&gt;',
+            watch: {
+            '$route'() {
+            console.log('Route updated');
+            }
+            }
+           };
+    </pre>
+</h3>
+<h1 translate="no">Passing Params to Components as Props</h1>
+<p>
+    As an alternative to using this.$route.params in your component, you can get vuerouter to pass in the params as props to your router component. For example, let’s
+take the following component:
+</p>
+<h3>
+    <pre>
+        const PageUser = {
+            template: '&lt;p&gt;User ID: {{ $route.params.userId }}&lt;/p&gt;'
+           };
+           const router = new VueRouter({
+            routes: [
+            {
+            path: '/user/:userId',
+            component: PageUser
+            }
+            ]
+           });
+    </pre>
+</h3>
+<p>
+    Navigating to /user/1234 will result in “User ID: 1234” being output to the page.
+</p>
+<p>
+    To tell vue-router to pass the user ID in as a prop instead, you can specify props:
+true on the router:
+</p>
+<h3>
+    <pre>
+        const PageUser = {
+            props: ['userId'],
+            template: '&lt;p&gt;User ID: {{ userId }}&lt;/p&gt;'
+           };
+           const router = new VueRouter({
+            routes: [
+            {
+            path: '/user/:userId',
+            component: PageUser,
+            props: true
+            }
+            ]
+           });
+    </pre>
+</h3>
+<p>
+    The advantage of using props instead of referring to $route.params is that the component is no longer closely coupled to vue-router. Imagine in the future you want to
+display more than one user per page; with the first code example, that would be
+tricky, but with the second example, it would be a lot easier, as you could just call the
+component in another page as if it were an ordinary component.
+</p>
+<h1 translate="no">Nested Routes</h1>
+<p>
+    You’ll find that after you build sufficiently complicated apps, you’ll have sections of
+your sites in which you want every page to have common styling or content. For
+example, maybe you have an admin section and you want to add another header
+below your normal site header to navigate around your admin section, or maybe you
+have a page displaying a product and you want to add a tab component that changes
+the URL too. For some examples, such as the admin section header example, it would
+be easy enough to just store the header in a component and manually include it on
+every single page. For other examples, such as a product page that has only a small
+portion of the content that is changing, you don’t really want the individual tabs to be
+responsible for displaying the rest of the page—it’s much better to use a nested route
+instead.
+</p>
+<p>
+    A nested route allows you to specify children of a route and gives you another
+&lt;router-view /&gt; component to display them in. For example, let’s build a settings
+section of a website, with a sidebar for navigating between settings pages. /settings/
+profile will be a page for users to modify their profiles, and /settings/email will allow
+them to modify their email preferences.
+</p>
+<p>The profile page at /settings/profile looks like this:</p>
+<div class="image">
+<img src="3.png" alt="vuejs">
+</div>
+<p>
+    The email preferences page at /settings/email looks like this:
+</p>
+
+<div class="image">
+    <img src="4.png" alt="vuejs">
+    </div>
+<p>
+    As you can see, both pages share a header and a sidebar. The header will be dealt with
+the normal way (it will be outside the root &lt;router-view /&gt; component), but we
+don’t want the sidebar to display on all pages, only the settings pages.
+</p>
+<p>
+    To achieve this, we create a /settings route, and then give that route two child routes,
+profile and email. Here is what the router looks like:
+</p>
+<h3>
+    <pre translate="no">
+        import PageSettings from './components/pages/Settings';
+import PageSettingsProfile from './components/pages/SettingsProfile';
+import PageSettingsEmail from './components/pages/SettingsEmail';
+const router = new VueRouter({
+ routes: [
+ {
+ path: '/settings',
+ component: PageSettings,
+ children: [
+ {path: 'profile',
+ component: PageSettingsProfile,
+ },
+ {
+ path: 'email',
+ component: PageSettingsEmail,
+ }
+ ]
+ }
+ ]
+});
+    </pre>
+</h3>
+<p>
+    Then, in the PageSettings component, we can use another &lt;router-view /&gt; component:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;div&gt;
+            &lt;the-sidebar /&gt;
+            &lt;router-view /&gt;
+           &lt;/div&gt;
+    </pre>
+</h3>
+<p>Now, accessing /settings/profile results in the following HTML:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;div id="app"&gt;
+            &lt;h1&gt;Site title&lt;/h1&gt;
+            &lt;main&gt;
+            &lt;div&gt;
+            &lt;div class="sidebar"&gt;
+            ...sidebar HTML...
+            &lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div class="page-profile"&gt;
+            ...profile settings page HTML...
+            &lt;/div&gt;
+            &lt;/main&gt;
+            &lt;p&gt;Page footer&lt;/p&gt;
+           &lt;/div&gt;
+    </pre>
+</h3>
+<p>
+    As you can see, the page has the header and footer from outside the root &lt;routerview /&gt; from the example in the first section of this paragraph, the sidebar from
+inside the settings page but outside the second &lt;router-view /&gt; component, and the
+contents of the profile settings page.
+</p>
+<h1 translate="no">Redirect and Alias</h1>
+<p>
+    Sometimes you want to redirect from one page to another; for example, maybe you’ve
+decided to rename /settings to /preferences. In that case, you don’t want your users
+who are used to going to /settings to see an error page, and you don’t want search
+engines to be linking to pages that don’t exist anymore.
+</p>
+<p>
+    To do this, you can specify a route with a direct property instead of a component:
+</p>
+<h3>
+    <pre translate="no">
+        const router = new VueRouter({
+            routes: [
+            {
+            path: '/settings',
+            redirect: '/preferences'
+            }
+            ]
+           });
+    </pre>
+</h3>
+<p>
+    Now, anyone accessing /settings will be redirected to /preferences.
+</p>
+<p>
+    An alternative to using redirects is to specify an alias of a component. For example, if
+you want the settings page to be accessible from both /settings and /preferences, you
+can give the /settings route an alias of /preferences:
+</p>
+<h3>
+    <pre translate="no">
+        import PageSettings from './components/pages/Settings';
+const router = new VueRouter({
+ routes: [
+ {
+ path: '/settings',
+ alias: '/preferences',
+ component: PageSettings
+ }
+ ]
+});
+    </pre>
+</h3>
+<p>
+    I’ve found this useful in the past when I want both /user and /user/:userId to point to
+the same component.
+</p>
+<h1 translate="no">Navigation</h1>
+<p>
+    OK, so we have some routing now. If you navigate to /user/1234, you will see a different thing than if you navigate to /preferences, even though the same content is being
+served by the server. But how can we enable the user to navigate between routes? The
+obvious answer—using &lt;a&gt; tags—isn’t the best one. Although using anchors to link
+between pages will technically work, if you’re using HTML5 history mode, the page
+will reload every time you click a link, as in a traditional website. We can do better!
+Because everything is handled client-side, we can navigate between pages without
+having to reload the page. The router will even update the URL for you.
+</p>
+<p>
+    To do this, use the &lt;router-link&gt; element instead of the &lt;a&gt; element. It works similarly to the traditional anchor tag:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;router-link to="/user/1234"&gt;Go to user #1234&lt;/router-link&gt;
+    </pre>
+</h3>
+<p>
+    Clicking that link will immediately take you to /user/1234 without having to load a
+new page. This improves the performance of your sites a ton. After the initial page
+</p>
+<p>
+    load, it’s super quick to navigate between pages as the HTML, JavaScript, and CSS has
+been downloaded already.
+</p>
+<p>
+    In addition to handling navigation without forcing the page to reload, vue-router also
+automatically handles your mode for you: using hash mode, the preceding link will
+take you to #/user/1234, whereas using history mode, it’ll take you to /user/1234.
+The &lt;router-link&gt; component has a few properties beyond to. I cover the most
+important ones here, but check out the API documentation for the full list.
+</p>
+<h2 translate="no">The output Tag</h2>
+<p>
+    By default, using  &lt;router-link&gt; results in an &lt;a&gt; tag being output to the page. For
+        instance, the example from the previous section results in the following output:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;a href="/user/1234"&gt;Go to user #1234&lt;/a&gt;
+    </pre>
+</h3>
+<i>
+    The href won’t be used if you click the link, as Vue will have added
+an event listener that will cancel the default click event to handle
+the navigation itself. It’s still useful to have for a few reasons,
+though, such as being able to see where a link is going by hovering
+over it or being able to open a link in a new tab (which isn’t handled by vue-router).
+</i>
+<p>
+    Sometimes, however, you might want to output an element other than an anchor tag,
+such as a list element in a navigation bar. You can use the tag property to do that:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;router-link to="/user/1234" tag="li"&gt; Go to user #1234&lt;/router-link&gt; 
+    </pre>
+</h3>
+<p>
+    This results in the following being output to the page:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;li&gt;Go to user #1234&lt;/li&gt;
+    </pre>
+</h3>
+<p>
+    Vue will then add an event listener to the element that detects when it is clicked and
+deals with the navigation.
+</p>
+<p>
+    This isn’t optimal, though—as we’ve lost the anchor tag and the href attribute, we’ve
+lost a couple of important native browser behaviors: the browser doesn’t know that
+the list item is a link, so hovering over it won’t give you any information about the
+link; you can’t right-click and open the link in a new tab; and assistive technology
+such as a screen reader won’t announce the element as a link.
+</p>
+<p>
+    To fix this, we can add an anchor tag into the &lt;router-link&gt; element:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;router-link to="/user/1234" tag="li"&gt;&lt;a&gt;Go to user #1234&lt;/a&gt;&lt;/router-link&gt;
+    </pre>
+</h3>
+<p>
+    The output HTML is now as follows:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;li&gt;&lt;a href="/user/1234"&gt;Go to user #1234&lt;/a&gt;&lt;/li&gt;
+    </pre>
+</h3>
+<p>
+    Perfect. vue-router will handle the routing when it can, but we’ll have all the normal
+behavior we expect from links.
+</p>
+<h1 translate="no">Active Class</h1>
+<p>
+    A link is active when the path in the to property of the &lt;router-link&gt; component
+        matches the path of the current page. If you’re on /user/1234, that link will be active.
+        When a link is active, vue-router automatically applies a class to the generated element. By default, this class is router-link-active, but you can configure the class
+        added by using the active-class property. This is useful when you’re using a UI
+        library or existing code in which the active link is already set to something else. For
+        example, if you’re using Bootstrap and have a navigation bar (navbar in Bootstrap),
+        you set the current active link by using the active class.
+</p>
+<p>
+    Let’s get a simple Bootstrap navbar working with Vue. Here’s what we’re aiming for:
+</p>
+<h3>
+    <pre>
+        &lt;ul class="nav navbar-nav"&gt;
+            &lt;li class="active"&gt;&lt;a href="/blog"&gt;Blog&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href="/user/1234"&gt;User #1234&lt;/a&gt;&lt;/li&gt;
+           &lt;/ul&gt;
+    </pre>
+</h3>
+<p>
+    We need to change two things. First, the active class is being added to the li element, not the a element, so we need to tell vue-router to output an li element instead
+of the default a link. Second, the class being added is active, not router-linkactive, so that needs changing too.
+</p>
+<p>Here’s our Vue-ified code:</p>
+<h3>
+    <pre translate="no">
+        &lt;ul class="nav navbar-nav"&gt;
+            &lt;router-link to="/blog" tag="li" active-class="active"&gt;
+            &lt;a&gt;Blog&lt;/a&gt;
+            &lt;/router-link&gt;
+            &lt;router-link to="/user/1234" tag="li" active-class="active"&gt;
+            &lt;a&gt;User #1234&lt;/a&gt;
+            &lt;/router-link&gt;
+           &lt;/ul&gt;
+    </pre>
+</h3>
+<p>
+    The outputted HTML is exactly the same as the example before we added Vue; vuerouter even adds the href attribute to the &lt;a&gt; elements.
+</p>
+<h1 translate="no">
+    Native Events
+</h1>
+<p>
+    If you want to add a click event handler to a &lt;router-link&gt;, you can’t just use
+        @click. The following will not work:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;!-- This will not work --&gt;
+&lt;router-link to="/blog" @click="handleClick"&gt;Blog&lt;/router-link&gt;
+    </pre>
+</h3>
+<p>
+    By default, using v-on on a component listens to custom events emitted by the component. You saw this in Chapter 2. You can use the .native modifier to listen to the
+native event instead of the custom event:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;router-link to="/blog" @click.native="handleClick"&gt;Blog&lt;/router-link&gt;
+    </pre>
+</h3>
+<p>
+    Now when the link is clicked, the handleClick method will be called.
+</p>
+<h1 translate="no">
+    Programmatic Navigation
+</h1>
+<p>
+    In addition to enabling the user to navigate using links, you can also navigate programmatically using a couple of methods on the router. The methods imitate the
+browser’s native history methods—history.pushState(), history.replaceState(),
+and history.go()—so if you’re familiar with them, you’ll recognize the syntax.
+</p>
+<p>
+    To go to a path, you can use router.push() (or this.$router.push() if you’re in a
+component):
+</p>
+<h3>
+    <pre translate="no">
+        router.push('/user/1234');
+    </pre>
+</h3>
+<p>
+    This does the equivalent of clicking a &lt;router-link&gt; component with a to property
+        of /user/1234—in fact, vue-router uses router.push() internally when you click a
+        &lt;router-link&gt; component.
+</p>
+<p>
+    There’s also router.replace(), which behaves similarly to router.push(): it’ll take
+you to the route you’ve specified. The difference is that while router.push() will add
+a new entry to the history—so, if the user presses the Back button, the router will go
+back to the previous route—router.replace() replaces the current entry, so the
+Back button will go back to the route before.
+</p>
+<p>
+    Generally, you want router.push(), but router.replace() is useful in specific cases.
+For example, if you have human-readable article URLs such as /blog/hello-world, if
+the user renames the post, you might want to use router.replace() to go to /blog/
+hello-world, as there is no point in having both URLs in the history
+</p>
+<p>
+    Finally, router.go() allows you to navigate backward and forward through history,
+as if pressing the browser Back and Forward buttons. To go back a record, you’d use
+router.go(-1), and to go forward 10 records, you’d use router.go(1). If there aren’t
+that many records, the function call will fail silently.
+</p>
+<h1 translate="no">Navigation Guards</h1>
+<p>
+    Let’s say you want to restrict users who aren’t logged in from accessing certain sections of your app. You have a userAuthenticated() function that returns true if the
+user is logged in, but what now? <br>
+vue-router provides functionality that allows you to run code before navigation
+occurs and, if you tell it to, cancel the navigation or send the user somewhere else.
+</p>
+<p>
+    You can use router.beforeEach() to add a guard to the router. It’s passed three arguments: to, from, and next, where to and from are the routes being navigated to and
+from, and next is a callback where you can tell vue-router to proceed with the navigation, cancel it, redirect to somewhere else, or register an error.
+</p>
+<p>
+    Let’s look at a guard that stops unauthenticated users from being able to access anything starting with /account:
+</p>
+<h3>
+    <pre translate="no">
+        router.beforeEach((to, from, next) => {
+            if (to.path.startsWith('/account') && !userAuthenticated()) {
+            next('/login');
+            } else {
+            next();
+            }
+           });
+    </pre>
+</h3>
+<p>
+    If the path of the route being navigated to starts with /account and the user isn’t logged in, the user will be redirected to /login; otherwise, next() will be called without
+any arguments, and they’ll be able to see the account page they requested. It’s important to remember to call next(); otherwise, the guard will never be resolved!
+</p>
+<p>
+    Checking the path in the guard can get tedious and confusing when you have a site
+with a lot of routes, so another feature you’ll find useful here is route meta fields. You
+can add a meta property to the route, and then access it again from the guard. For
+example, let’s set a requiresAuth property on the account route and check that in the
+guard instead:
+</p>
+<h3>
+    <pre translate="no">
+        const router = new VueRouter({
+            routes: [
+            {
+            path: '/account',
+            component: PageAccount,
+            meta: {
+            requiresAuth: true
+            }
+            }
+            ]
+           });
+           router.beforeEach((to, from, next) => {
+            if (to.meta.requiresAuth && !userAuthenticated()) {
+            next('/login');
+            } else {
+            next();
+            }
+           });
+    </pre>
+</h3>
+<p>
+    Now, whenever a user accesses /account, the router will check the requiresAuth
+property of the router, and if the user isn’t authenticated, will redirect them to the
+login page.
+</p>
+<b>
+    When using nested routes, to.meta will equal the child component, not the parent. If you add the meta object to /account and the
+user is accessing /account/email, the meta object checked will be the
+one for the child, not the parent. To work around this, you can iterate through to.matched, which contains the parent routes as well:
+</b>
+<h3>
+    <pre translate="no">
+        router.beforeEach((to, from, next) => {
+            const requiresAuth = to.matched.some((record) => {
+            return record.meta.requiresAuth;
+            }
+            if (requiresAuth && !userAuthenticated()) {
+            next('/login');
+            } else {
+            next();
+            }
+           });
+    </pre>
+</h3>
+<p>
+    Now if you access /account/email and that route is a child route
+of /account, the meta objects for both of them will be checked, not
+just the meta object for /account/email.
+</p>
+<p>
+    In addition to beforeEach, which runs before navigation, an afterEach guard that
+runs afterward. Functions provided to this are passed only two arguments, to and
+from, and so cannot affect the navigation itself. It’s a useful place to do stuff such as
+setting the page title, though:
+</p>
+<h3>
+    <pre translate="no">
+        const router = new VueRouter({
+            routes: [
+            {
+            path: '/blog',
+            component: PageBlog,
+            meta: {
+            title: 'Welcome to my blog!'
+            }
+            }
+            ]
+           });
+           router.afterEach((to) => {
+            document.title = to.meta.title;
+           });
+    </pre>
+</h3>
+<p>
+    That code will look at the meta attribute of the route every time page navigation
+occurs and set the page title to the title attribute of the meta object.
+</p>
+<h1>Per-Route Guards</h1>
+<p>
+    In addition to defining beforeEach and afterEach guards on the router, you can
+define beforeEnter guards on individual routes:
+</p>
+<h3>
+    <pre translate="no">
+        const router = new VueRouter({
+            routes: [
+            {
+            path: '/account',
+            component: PageAccount,
+            beforeEnter(to, from, next) {
+            if (!userAuthenticated()) {
+            next('/login');
+            } else {
+            next();
+            }
+            }
+            }
+            ]
+           });
+    </pre>
+</h3>
+<p>
+    These beforeEnter guards behave in exactly the same way as beforeEach guards, just
+applied only to individual routes instead of all of them.
+</p>
+<h1>In-Component Guards</h1>
+<p>
+    Finally, you can also specify guards in components themselves. You can use three
+guards: beforeRouteEnter (the equivalent of beforeEach); beforeRouteUpdate
+(which you met earlier in this chapter); and beforeRouteLeave (which is called
+before navigating away from a route). All three of those guards accept the same three
+arguments as beforeEach and beforeEnter. <br>
+Let’s take our previous authentication examples and apply the same logic in a component:
+</p>
+<h3>
+    <pre translate="no">
+        const PageAccount = {
+            template: '&lt;div&gt;...account page...&lt;/div&gt;',
+            beforeRouteEnter(to, from, next) {
+            if (!userAuthenticated()) {
+            next('/login');
+            } else {
+            next();
+            }
+            }
+    </pre>
+</h3>
+<p>
+    Note that this is undefined in beforeRouterEnter, because the component hasn’t
+been created yet. Instead, you can pass a callback to next, which will be passed the
+component as the first argument:
+</p>
+<h3>
+    <pre translate="no">
+        const PageAccount = {
+            template: '&lt;div&gt;...account page...&lt;/div&gt;',
+            beforeRouteEnter(to, from, next) {
+            next((vm) => {
+            console.log(vm.$route);
+            });
+            }
+           };
+    </pre>
+</h3>
+<p>
+    You can use this in beforeRouteUpdate and beforeRouteLeave as you can in most
+other places in the component, and so passing a callback to next isn’t supported for
+them.
+</p>
+<h1>Route Order</h1>
+<p>
+    vue-router internally picks which route to display by going through the array of
+routes and picking the first one that matches the current URL. Knowing this is
+important—it means that the order of the routes is important. Take the following
+routers:
+</p>
+<h3>
+    <pre translate="no">
+        const routerA = new VueRouter({
+            routes: [
+            {
+            path: '/user/:userId',
+            component: PageUser
+            },
+            {
+            path: '/user/me',
+            component: PageMe
+            }
+            ]
+           });
+           const routerB = new VueRouter({
+            routes: [
+            {
+            path: '/user/me',
+            component: PageMe
+            },
+            {
+            path: '/user/:userId',
+            component: PageUser
+            }
+            ]
+           });
+    </pre>
+</h3>
+<p>
+    They look similar: both of them define two routes, one for a user to access their own
+page at /user/me and another to access other users pages at /user/:userId.
+</p>
+<p>
+    Using routerA, it is impossible to access PageMe. This is because vue-router has gone
+through the router testing whether each path matches: if you access /user/me, that matches /user/:userId, so userId is set to me and the PageUser component is dis‐
+played. With routerB, /user/me matches first, so that component is used, and then
+anything else results in the PageUser route being displayed.
+</p>
+<h1>404 Pages</h1>
+<p>
+    We can use the fact that vue-router searches through the routes in order with the
+wildcard operator (*) to display an error page when no other route has matched. To
+do that is as simple as follows:
+</p>
+<h3>
+    <pre translate="no">
+        const router = new VueRoute({
+            routes: [
+            // ...your other routes...
+            {
+            path: '*',
+            component: PageNotFound
+            }
+            ]
+           });
+    </pre>
+</h3>
+<p>
+    The PageNotFound component will display when no other route has matched.
+</p>
+<p>
+    When using nested routes, if none of the child paths match, the router carries on
+looking down the array of routes outside the parent, so the same PageNotFound component will be used for them. If you want the error page to display in the parent component, you’ll need to add the wildcard route to the array of child routes too:
+</p>
+<h3>
+    <pre translate="no">
+        const router = new VueRoute({
+            routes: [
+            {
+            path: '/settings',
+            component: PageSettings,
+            children: [
+            {
+            path: 'profile',
+            component: PageSettingsProfile
+            },
+            {
+            path: '*',
+            component: PageNotFound
+            }
+            ]
+            }
+            {
+            path: '*',
+            component: PageNotFound
+            }
+            ]
+           });
+    </pre>
+</h3>
+<p>
+    Now the same PageNotFound component will display, but with the sidebar from the
+PageSettings component too
+</p>
+<h1>Route Names</h1>
+<p>
+    The final feature of vue-router I’ll cover in this chapter is the ability to give your
+routes names, and then use them to refer to your routes instead of their paths. Just
+add a name attribute to the route in the router:
+</p>
+<h3>
+    <pre translate="no">
+        const router = new VueRouter({
+            routes: [
+            {
+            path: '/',
+            name: 'home',
+            component: PageHome
+            },
+            {
+            path: '/user/:userId',
+            name: 'user',
+            component: PageUser
+            }
+            ]
+           });
+    </pre>
+</h3>
+<p>
+    Now instead of linking to the path, you can link using the name instead:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;router-link :to="{ name: 'home' }"&gt;Return to home&lt;/router-link&gt;
+    </pre>
+</h3>
+<p>The following two lines of code are equivalent:</p>
+<h3>
+    <pre translate="no">
+        &lt;router-link to="/user/1234"&gt;User #1234&lt;/router-link&gt;
+&lt;router-link :to="{ path: '/user/1234' }"&gt;
+User #1234
+&lt;/router-link&gt;
+    </pre>
+</h3>
+<p>
+    The first is just short for the second.
+</p>
+<p>You can use the same syntax with router.push():</p>
+<h3>
+    <pre translate="no">
+        router.push({ name: 'home' });
+    </pre>
+</h3>
+<p>
+    Naming your routes and referring to them by using only their names instead of their
+paths means that the route and the path are no longer so tightly coupled: to change
+the path of a route, you have to change only the path in the router instead of having
+to go through all your existing links and updating them.
+</p>
+<p>
+    To link to a route with params such as the preceding user route, you can specify
+them in the params property of the object:
+</p>
+<h3>
+    <pre translate="no">
+        &lt;router-link :to="{ name: 'user', params: { userId: 1234 }}"&gt;
+            User #1234
+            &lt;/router-link&gt;
+    </pre>
+</h3>
+<h1>Summary</h1>
+<p>
+    In this chapter, you looked at using vue-router to create a single-page application—an
+application with multiple pages in which the routing is handled client-side. You
+looked at various ways to configure a router, using dynamic routes to create dynamic
+paths; nested routes to create child routes; and redirects, aliases, and wildcard paths
+for 404 pages. You also looked at &lt;router-link&gt; to create links, named routes to
+almost entirely separate the path from the route, and navigation guards to run additional logic when a navigation event occurs.
+</p>
+<a href="chap6.html">State Management with Vuex</a>
+
+
+
+
+
+
+
+</body>
+</html>
